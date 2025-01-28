@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS Online</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Login Page -->
+    <div id="login-page">
+        <h1>POS Online</h1>
+        <button id="loginBtn">Sign in with Google</button>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div id="dashboard" style="display: none;">
+        <div id="content">
+            <h1>Welcome to Dashboard</h1>
+        </div>
+
+        <!-- Navigation Bar -->
+        <footer class="navbar">
+            <button class="nav-btn" onclick="showProducts()">
+                <span class="icon">📦</span>
+                <span class="label">Products</span>
+            </button>
+            <button class="nav-btn" onclick="showPOS()">
+                <span class="icon">⭐</span>
+                <span class="label">New Transaction</span>
+            </button>
+            <button class="nav-btn" onclick="showHistory()">
+                <span class="icon">📜</span>
+                <span class="label">Sales History</span>
+            </button>
+            <button class="nav-btn" onclick="showAccount()">
+                <span class="icon">👤</span>
+                <span class="label">Account</span>
+            </button>
+        </footer>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>
