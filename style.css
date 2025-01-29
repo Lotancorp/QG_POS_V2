@@ -272,3 +272,39 @@ button:hover {
     border-color: #0056b3;
     box-shadow: 0 0 8px rgba(0, 123, 255, 0.25);
 }
+
+#pos-product-list {
+    display: grid;        /* Mengaktifkan grid layout */
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;            /* Jarak antar item */
+    margin-top: 10px;
+  }
+  
+  .pos-product-item {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background-color: #fff;
+  }
+  
+  .pos-product-item img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    margin-bottom: 8px;
+  }
+  
+  .product-info h4 {
+    margin: 0 0 4px 0;
+  }
+  
+  .add-to-cart-btn {
+    margin-top: 10px;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  
