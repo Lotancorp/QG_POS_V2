@@ -106,10 +106,24 @@ const editProfile = () => {
 window.showProducts = () => {
     const content = document.getElementById('content');
     content.innerHTML = `
+        <div class="search-container">
+            <input type="text" id="searchProduct" placeholder="Search products...">
+        </div>
         <h2>Products</h2>
         <button onclick="addProductForm()">Add Product</button>
         <ul id="productList"></ul>
     `;
+
+    // Tambahkan event listener untuk search
+    document.getElementById('searchProduct').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const productItems = document.querySelectorAll('.product-item');
+        
+        productItems.forEach(item => {
+            const productName = item.querySelector('h3').textContent.toLowerCase();
+            item.style.display = productName.includes(searchTerm) ? 'flex' : 'none';
+        });
+    });
 
     setTimeout(() => {
         loadProducts();
@@ -376,3 +390,4 @@ window.formatCurrency = function(input) {
         input.value = parseInt(value).toLocaleString("id-ID");
     }
 };
+

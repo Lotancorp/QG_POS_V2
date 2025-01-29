@@ -12,68 +12,19 @@ body, html {
     font-family: Arial, sans-serif;
     background-color: #c6dbee;
     color: #333;
-    overflow: hidden; /* Mencegah scroll ganda */
+    overflow: hidden;
 }
 
+/* ==========================
+   LAYOUT COMPONENTS
+   ========================== */
 #dashboard, #newTransaction {
     width: 100%;
     max-width: 800px;
     margin: auto;
-    overflow-y: auto; /* Scroll hanya dalam div, bukan di body */
+    overflow-y: auto;
 }
 
-/* ==========================
-   NAVBAR
-   ========================== */
-   .navbar {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    background: white;
-    border-top: 1px solid #ccc;
-    padding: 10px;
-    display: flex;
-    justify-content: space-around;
-    z-index: 1000; /* Pastikan navbar di atas */
-}
-
-.nav-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    padding: 5px 0;
-    font-size: 0.8rem;
-    color: #004d99;
-    transition: color 0.3s ease, transform 0.2s ease;
-}
-
-.nav-btn .icon {
-    font-size: 22px; /* Ukuran ikon */
-    margin-bottom: 5px;
-}
-
-.nav-btn:hover {
-    color: #003366;
-    transform: scale(1.1);
-}
-
-
-.nav-btn:active {
-    transform: scale(0.95);
-}
-
-.nav-btn.active {
-    color: #004d99;
-}
-
-/* ==========================
-   CONTENT AREA
-   ========================== */
 #content {
     width: 90%;
     max-width: 800px;
@@ -83,24 +34,64 @@ body, html {
     border-radius: 15px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     overflow-y: auto;
-    padding-bottom: 70px; /* Memberikan jarak agar tidak tertutup navbar */
+    padding-bottom: 70px;
+    max-height: calc(100vh - 80px);
+}
+
+.navbar {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: white;
+    border-top: 1px solid #ccc;
+    padding: 10px;
+    display: flex;
+    justify-content: space-around;
+    z-index: 1000;
 }
 
 /* ==========================
-   BUTTONS
+   UI COMPONENTS
    ========================== */
+/* Buttons */
 button {
-    width: 100%;
     padding: 10px;
-    margin-top: 10px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    transition: opacity 0.3s;
+    transition: all 0.3s ease;
 }
 
-button:hover {
-    opacity: 0.8;
+.nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: none;
+    padding: 5px 0;
+    font-size: 0.8rem;
+    color: #004d99;
+}
+
+.nav-btn .icon {
+    font-size: 22px;
+    margin-bottom: 5px;
+}
+
+.action-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+}
+
+.submit-btn {
+    background-color: #007bff;
+    color: white;
+}
+
+.cancel-btn {
+    background-color: #dc3545;
+    color: white;
 }
 
 #addProduct {
@@ -111,14 +102,7 @@ button:hover {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-#addProduct:hover {
-    background-color: #99ccff;
-    transform: scale(1.05);
-}
-
-/* ==========================
-   PRODUCT LIST
-   ========================== */
+/* Product List */
 .product-list {
     list-style: none;
     padding: 0;
@@ -139,25 +123,13 @@ button:hover {
     transition: transform 0.2s ease-in-out;
 }
 
-.product-item:hover {
-    transform: scale(1.02);
-}
-
 .product-image {
     width: 80px;
     height: 80px;
-    aspect-ratio: 1/1;
     object-fit: cover;
     border-radius: 8px;
     margin-right: 15px;
     flex-shrink: 0;
-}
-
-.product-info {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
 }
 
 .product-info h3 {
@@ -169,48 +141,8 @@ button:hover {
     text-overflow: ellipsis;
 }
 
-.product-info p {
-    margin: 5px 0 0;
-    font-size: 14px;
-    color: #666;
-}
-
-.edit-btn, .delete-btn {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    transition: color 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 5px;
-}
-
-.edit-btn {
-    color: #007bff;
-}
-
-.delete-btn {
-    color: #dc3545;
-}
-
-.edit-btn:hover {
-    color: #0056b3;
-}
-
-.delete-btn:hover {
-    color: #b02a37;
-}
-
-
-/* ==========================
-   FORM STYLES
-   ========================== */
-   .form-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+/* Forms */
+.form-container {
     width: 90%;
     max-width: 400px;
     background: #fff;
@@ -218,21 +150,8 @@ button:hover {
     border-radius: 10px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
     margin: auto;
-    max-height: 80vh; /* Pastikan form tidak melebihi tinggi layar */
-    overflow-y: auto; /* Aktifkan scrolling */
-}
-
-#content {
-    flex-grow: 1;
-    overflow-y: auto; /* Pastikan scrolling aktif */
-    padding-bottom: 70px; /* Beri jarak agar tidak tertutup navbar */
-    max-height: calc(100vh - 80px); /* Batasi tinggi agar tetap bisa di-scroll */
-}
-
-label {
-    display: block;
-    font-weight: bold;
-    margin-top: 10px;
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
 input, select, textarea {
@@ -248,85 +167,20 @@ textarea {
     height: 80px;
 }
 
-.submit-btn {
-    background-color: #007bff;
-    color: white;
-}
-
-.cancel-btn {
-    background-color: #dc3545;
-    color: white;
-}
-
-/* ==========================
-   ACCOUNT PAGE
-   ========================== */
-.account-info {
-    background-color: #d6eaff;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    font-size: 1rem;
-    color: #004d99;
-}
-
-.account-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.action-btn {
-    background-color: #007bff;
-    color: white;
-    padding: 10px 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.action-btn:hover {
-    background-color: #0056b3;
-    transform: scale(1.05);
-}
-
-.action-btn:active {
-    transform: scale(0.95);
-}
-
-/* ==========================
-   ACCOUNT LIST
-   ========================== */
+/* Account Section */
 .account-header {
     background-color: #f5f5f5;
     padding: 20px;
-    text-align: left;
-    font-size: 1.5rem;
-    color: #333;
     border-bottom: 1px solid #ddd;
-}
-
-.account-header p {
-    font-size: 1rem;
-    color: #666;
-    margin-top: 5px;
 }
 
 .account-section {
     padding: 15px 20px;
 }
 
-.account-section h3 {
-    font-size: 1.2rem;
-    margin-bottom: 10px;
-    color: #555;
-}
-
 .account-list {
     list-style: none;
     padding: 0;
-    margin: 0;
 }
 
 .account-list li {
@@ -334,23 +188,49 @@ textarea {
     justify-content: space-between;
     padding: 10px 0;
     border-bottom: 1px solid #eee;
-    font-size: 1rem;
-    color: #333;
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
-.account-list li span {
-    color: #aaa;
-    font-size: 1.2rem;
+/* ==========================
+   INTERACTIONS & STATES
+   ========================== */
+button:hover {
+    opacity: 0.8;
+}
+
+.nav-btn:hover {
+    color: #003366;
+    transform: scale(1.1);
+}
+
+.nav-btn:active {
+    transform: scale(0.95);
+}
+
+.product-item:hover {
+    transform: scale(1.02);
+}
+
+.edit-btn:hover {
+    color: #0056b3;
+}
+
+.delete-btn:hover {
+    color: #b02a37;
 }
 
 .account-list li:hover {
     background-color: #f0f8ff;
 }
 
+.action-btn:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
 /* ==========================
-   TOAST NOTIFICATION
+   UTILITIES
    ========================== */
 .toast {
     position: fixed;
@@ -374,58 +254,21 @@ textarea {
     to { opacity: 0; }
 }
 
-/* Search Product */
+/* Search Container */
+.search-container {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
 #searchProduct {
     width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
+    padding: 12px;
+    border: 2px solid #007bff;
+    border-radius: 25px;
+    transition: all 0.3s ease;
 }
 
-/* Dropdown Suggestion */
-.dropdown {
-    list-style: none;
-    padding: 0;
-    background: white;
-    border: 1px solid #ddd;
-    max-height: 200px;
-    overflow-y: auto;
-    position: absolute;
-    width: calc(100% - 20px);
-}
-
-.dropdown li {
-    padding: 10px;
-    cursor: pointer;
-}
-
-.dropdown li:hover {
-    background: #f0f0f0;
-}
-
-/* Transaction Table */
-#transactionTable {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-#transactionTable th, #transactionTable td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: center;
-}
-
-#transactionTable input {
-    width: 50px;
-    text-align: center;
-}
-
-button {
-    padding: 10px;
-    margin-top: 10px;
-    border: none;
-    cursor: pointer;
-}
-
-button:hover {
-    opacity: 0.8;
+#searchProduct:focus {
+    border-color: #0056b3;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.25);
 }
