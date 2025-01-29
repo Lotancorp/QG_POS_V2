@@ -3,7 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebas
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
 
-// Firebase Configuration
+// Firebase Configuration SECTION
 const firebaseConfig = {
     apiKey: "AIzaSyCS2k7FjEGW8ozISjE5C-TS1nVBRZwwdwU",
     authDomain: "pos--online.firebaseapp.com",
@@ -13,17 +13,14 @@ const firebaseConfig = {
     appId: "1:223939358454:web:406b0aebc07d22723a86d7",
     measurementId: "G-JKMHHHMTEK"
 };
-
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
 // Elements
 const loginPage = document.getElementById("login-page");
 const dashboard = document.getElementById("dashboard");
 const loginBtn = document.getElementById("loginBtn");
-
 // Login with Google
 loginBtn.addEventListener("click", async () => {
     const provider = new GoogleAuthProvider();
@@ -38,15 +35,16 @@ loginBtn.addEventListener("click", async () => {
 // Handle Authentication State
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        console.log("User logged in:", user);
         loginPage.style.display = "none";
         dashboard.style.display = "block";
+        loadProducts();
     } else {
-        console.log("No user logged in");
         loginPage.style.display = "flex";
         dashboard.style.display = "none";
     }
 });
+
+
 
 // Account Section
 window.showAccount = () => {
@@ -98,60 +96,70 @@ const editProfile = () => {
     });
 };
 
-// Products Section
+
+
+
+
+
+// PRODUCTS SECTION
+// **Menampilkan Halaman Produk**
 window.showProducts = () => {
     const content = document.getElementById('content');
     content.innerHTML = `
-        <div class="product-header">
-            <h2>Products</h2>
-            <button class="add-product-btn" onclick="addProductForm()">Add Product</button>
-        </div>
-        <ul id="productList" class="product-list">
-            <li>Loading products...</li>
-        </ul>
+        <h2>Products</h2>
+        <button onclick="addProductForm()">Add Product</button>
+        <ul id="productList"></ul>
     `;
-    loadProducts();
-};
 
-// Add Product
-const addProductForm = () => {
+    setTimeout(() => {
+        loadProducts();
+    }, 100);
+};
+// **Menampilkan Form Tambah Produk**
+window.addProductForm = () => {
     const content = document.getElementById('content');
     content.innerHTML = `
         <div class="form-container">
             <h2>Add New Product</h2>
             <form id="addProductForm">
-                <label for="productName">Product Name:</label>
+                <label>Product Image:</label>
+                <input type="file" id="productImage" accept="image/*">
+                <img id="imagePreview" src="default-thumbnail.png" alt="Image Preview" style="max-width: 100px; height: auto; margin-top: 10px;">
+
+                <label>Product Name:</label>
                 <input type="text" id="productName" required>
-                <label for="productPrice">Price:</label>
-                <input type="number" id="productPrice" required>
-                <button type="submit" class="submit-btn">Save Product</button>
-                <button type="button" class="cancel-btn" onclick="showProducts()">Cancel</button>
+
+                <label>Price (Rp):</label>
+                <input type="text" id="productPrice" required oninput="formatCurrency(this)">
+
+                <label>Purchase Price (Rp):</label>
+                <input type="text" id="purchasePrice" required oninput="formatCurrency(this)">
+
+                <label>Stock:</label>
+                <input type="number" id="stock" required>
+
+                <label>Description:</label>
+                <textarea id="description"></textarea>
+
+                <label>Category:</label>
+                <div>
+                    <select id="categoryDropdown" required>
+                        <option value="" disabled selected>Select category</option>
+                    </select>
+                    <input type="text" id="newCategory" placeholder="Or create new category">
+                    <button type="button" onclick="addNewCategory()">Add</button>
+                </div>
+
+                <button type="submit">Save Product</button>
             </form>
         </div>
     `;
 
-    const form = document.getElementById('addProductForm');
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const name = document.getElementById('productName').value;
-        const price = parseFloat(document.getElementById('productPrice').value);
-
-        if (!name || price <= 0) {
-            alert("Please enter a valid product name and price.");
-            return;
-        }
-
-        try {
-            await addDoc(collection(db, `users/${auth.currentUser.uid}/products`), { name, price });
-            alert("Product added successfully!");
-            showProducts();
-        } catch (error) {
-            console.error("Error adding product:", error);
-        }
-    });
+    loadCategories();
+    setupProductForm();
 };
-
-// Load Products
+// Load Products with Image
+// Fungsi untuk menampilkan daftar produk dengan ikon edit & delete
 const loadProducts = async () => {
     const user = auth.currentUser;
     if (!user) {
@@ -169,14 +177,20 @@ const loadProducts = async () => {
             querySnapshot.forEach((doc) => {
                 const product = doc.data();
                 const li = document.createElement('li');
+                li.classList.add("product-item");
+
                 li.innerHTML = `
-                    <div class="product-item">
-                        <div class="product-info">
-                            <h3>${product.name}</h3>
-                            <p>Price: $${product.price}</p>
-                        </div>
-                        <button class="delete-btn" onclick="deleteProduct('${doc.id}')">Delete</button>
+                    <img src="${product.imageUrl || 'default-thumbnail.png'}" class="product-image">
+                    <div class="product-info">
+                        <h3>${product.name}</h3>
+                        <p>Price: Rp${parseInt(product.price).toLocaleString("id-ID")}</p>
                     </div>
+                    <button class="edit-btn" onclick="editProduct('${doc.id}', '${product.name}', '${product.price}', '${product.stock}', '${product.description}', '${product.imageUrl || 'default-thumbnail.png'}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="delete-btn" onclick="deleteProduct('${doc.id}')">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 `;
                 productList.appendChild(li);
             });
@@ -185,26 +199,180 @@ const loadProducts = async () => {
         console.error("Error loading products:", error);
     }
 };
+// Fungsi untuk mengedit produk
+window.editProduct = (productId, name, price, stock, description, imageUrl) => {
+    const content = document.getElementById('content');
+    content.innerHTML = `
+        <div class="form-container">
+            <h2>Edit Product</h2>
+            <form id="editProductForm">
+                <label>Product Image:</label>
+                <input type="file" id="editProductImage" accept="image/*">
+                <img id="editImagePreview" src="${imageUrl}" alt="Image Preview" class="product-image">
 
-// Delete Product
-const deleteProduct = async (productId) => {
+                <label>Product Name:</label>
+                <input type="text" id="editProductName" value="${name}" required>
+
+                <label>Price (Rp):</label>
+                <input type="text" id="editProductPrice" value="${price}" required oninput="formatCurrency(this)">
+
+                <label>Stock:</label>
+                <input type="number" id="editStock" value="${stock}" required>
+
+                <label>Description:</label>
+                <textarea id="editDescription">${description}</textarea>
+
+                <button type="submit" class="submit-btn">Save Changes</button>
+                <button type="button" class="cancel-btn" onclick="showProducts()">Cancel</button>
+            </form>
+        </div>
+    `;
+
+    // Tambahkan event listener untuk update data saat disubmit
+    const form = document.getElementById('editProductForm');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const user = auth.currentUser;
+        if (!user) {
+            alert("Please login first!");
+            return;
+        }
+
+        const updatedName = document.getElementById('editProductName').value;
+        const updatedPrice = parseInt(document.getElementById('editProductPrice').value.replace(/\./g, ''));
+        const updatedStock = parseInt(document.getElementById('editStock').value);
+        const updatedDescription = document.getElementById('editDescription').value;
+
+        try {
+            await updateDoc(doc(db, `users/${user.uid}/products`, productId), {
+                name: updatedName,
+                price: updatedPrice,
+                stock: updatedStock,
+                description: updatedDescription
+            });
+
+            alert("Product updated successfully!");
+            showProducts();
+        } catch (error) {
+            console.error("Error updating product:", error);
+        }
+    });
+};
+// Delete Product Function
+window.deleteProduct = async function(productId) {
+    const user = auth.currentUser;
+    if (!user) {
+        alert("Please login first!");
+        return;
+    }
+
     if (confirm("Are you sure you want to delete this product?")) {
         try {
-            await deleteDoc(doc(db, `users/${auth.currentUser.uid}/products`, productId));
+            await deleteDoc(doc(db, `users/${user.uid}/products`, productId));
             alert("Product deleted successfully!");
-            loadProducts();
+            loadProducts(); // Refresh daftar produk setelah penghapusan
         } catch (error) {
             console.error("Error deleting product:", error);
         }
     }
 };
+// **Menyiapkan Form Produk**
+function setupProductForm() {
+    document.getElementById('productImage').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
 
-// Logout
-window.logout = async () => {
+    const form = document.getElementById('addProductForm');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const user = auth.currentUser;
+        if (!user) {
+            alert("Please log in first!");
+            return;
+        }
+
+        const name = document.getElementById('productName').value;
+        const price = parseInt(document.getElementById('productPrice').value.replace(/\./g, ''));
+        const purchasePrice = parseInt(document.getElementById('purchasePrice').value.replace(/\./g, ''));
+        const stock = parseInt(document.getElementById('stock').value);
+        const description = document.getElementById('description').value;
+        let category = document.getElementById('categoryDropdown').value;
+        let imageUrl = document.getElementById('imagePreview').src;
+
+        if (!name || price <= 0 || stock < 0) {
+            alert("Please enter valid product details.");
+            return;
+        }
+
+        try {
+            await addDoc(collection(db, `users/${user.uid}/products`), {
+                name,
+                price,
+                purchasePrice,
+                stock,
+                description,
+                category,
+                imageUrl
+            });
+
+            alert("Product added successfully!");
+            showProducts();
+        } catch (error) {
+            console.error("Error adding product:", error);
+        }
+    });
+}
+// **Memuat Kategori dari Firestore**
+async function loadCategories() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const categoryDropdown = document.getElementById("categoryDropdown");
+    categoryDropdown.innerHTML = '<option value="" disabled>Select category</option>';
+
+    const querySnapshot = await getDocs(collection(db, `users/${user.uid}/categories`));
+    querySnapshot.forEach((doc) => {
+        const category = doc.data().name;
+        const option = document.createElement("option");
+        option.value = category;
+        option.textContent = category;
+        categoryDropdown.appendChild(option);
+    });
+}
+// **Menambahkan Kategori Baru**
+window.addNewCategory = async function() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const newCategoryInput = document.getElementById('newCategory');
+    const categoryDropdown = document.getElementById('categoryDropdown');
+    const newCategory = newCategoryInput.value.trim();
+
+    if (!newCategory) return;
+
     try {
-        await signOut(auth);
-        alert("Logged out successfully!");
+        await addDoc(collection(db, `users/${user.uid}/categories`), { name: newCategory });
+        const newOption = document.createElement('option');
+        newOption.value = newCategory;
+        newOption.textContent = newCategory;
+        categoryDropdown.appendChild(newOption);
+        categoryDropdown.value = newCategory;
+        newCategoryInput.value = '';
     } catch (error) {
-        console.error("Error during logout:", error);
+        console.error("Error adding category:", error);
+    }
+};
+// **Format Harga ke Rupiah**
+window.formatCurrency = function(input) {
+    let value = input.value.replace(/\D/g, "");
+    if (value) {
+        input.value = parseInt(value).toLocaleString("id-ID");
     }
 };

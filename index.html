@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>POS Online</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
 <body>
@@ -20,27 +21,29 @@
         <div id="content">
             <h1>Welcome to Dashboard</h1>
         </div>
+    </div>
 
         <!-- Navigation Bar -->
         <footer class="navbar">
             <button class="nav-btn" onclick="showProducts()">
-                <span class="icon">📦</span>
+                <i class="fas fa-box icon"></i> <!-- Ikon FontAwesome -->
                 <span class="label">Products</span>
             </button>
             <button class="nav-btn" onclick="showPOS()">
-                <span class="icon">⭐</span>
+                <i class="fas fa-credit-card icon"></i>
                 <span class="label">New Transaction</span>
             </button>
             <button class="nav-btn" onclick="showHistory()">
-                <span class="icon">📜</span>
+                <i class="fas fa-file-invoice icon"></i>
                 <span class="label">Sales History</span>
             </button>
             <button class="nav-btn" onclick="showAccount()">
-                <span class="icon">👤</span>
+                <i class="fas fa-user-circle icon"></i>
                 <span class="label">Account</span>
             </button>
         </footer>
-    </div>
+
+    
 
     <script type="module" src="script.js"></script>
 </body>
