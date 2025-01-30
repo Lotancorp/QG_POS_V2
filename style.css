@@ -44,9 +44,13 @@ body, html {
     width: 100%;
     background: white;
     border-top: 1px solid #ccc;
-    padding: 10px;
+    /* Gunakan padding yang lebih konsisten */
+    padding: 10px 0;
+    
+    /* Untuk distribusi item rata */
     display: flex;
-    justify-content: space-around;
+    justify-content: space-evenly;
+    align-items: center; /* Penting untuk center vertikal */
     z-index: 1000;
 }
 
@@ -62,19 +66,25 @@ button {
     transition: all 0.3s ease;
 }
 
+/* Setiap tombol punya margin horizontal yang kecil
+   supaya tidak berdempetan. */
 .nav-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
     background: none;
-    padding: 5px 0;
+    padding: 5px 10px; 
+    margin: 0 5px;
+    
     font-size: 0.8rem;
     color: #004d99;
+    text-decoration: none; /* Pastikan tidak ada underline */
 }
 
+/* Ikon di atas label, beri sedikit jarak */
 .nav-btn .icon {
     font-size: 22px;
-    margin-bottom: 5px;
+    margin-bottom: 3px; 
 }
 
 .action-btn {
@@ -199,9 +209,11 @@ button:hover {
     opacity: 0.8;
 }
 
+/* Mengurangi efek scale agar tombol tidak
+   terlalu melompat dan mengganggu layout */
 .nav-btn:hover {
     color: #003366;
-    transform: scale(1.1);
+    transform: scale(1.05); /* dari 1.1 atau 1.2 -> 1.05 */
 }
 
 .nav-btn:active {
@@ -307,4 +319,30 @@ button:hover {
     padding: 5px 10px;
     cursor: pointer;
   }
-  
+  .finance-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Jarak antar item */
+}
+
+.finance-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 15px;
+}
+
+.finance-label {
+    font-weight: bold;
+    color: #555;
+    font-size: 1rem;
+}
+
+.finance-value {
+    font-weight: 600;
+    color: #333;
+    font-size: 1rem;
+}

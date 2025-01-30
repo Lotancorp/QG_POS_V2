@@ -16,7 +16,9 @@ import {
     getDocs,
     deleteDoc,
     doc,
-    updateDoc
+    updateDoc,
+    runTransaction,
+    increment
   } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
   
   // Firebase Configuration SECTION
@@ -1100,67 +1102,106 @@ function calculateChange() {
 }
 
 /********************************************** 
- * FINALIZE TRANSACTION
+ * BUAT/MUAT NOMOR INVOICE
  **********************************************/
-async function finalizeTransaction() {
-  const totalText = document.getElementById('paymentTotal').textContent;
-  const total = parseInt(totalText.replace(/\./g, '')) || 0;
-
-  let paidText = document.getElementById('amountPaid').value;
-  paidText = paidText.replace(/\./g, '');
-  const paid = parseInt(paidText) || 0;
-
-  const change = paid - total;
-  if (change < 0) {
-    alert("Paid amount is less than total!");
-    return;
-  }
-
-  const method = document.getElementById('paymentMethod').value;
-  if (!confirm(`
-  Total: Rp${total.toLocaleString('id-ID')}
-  Paid: Rp${paid.toLocaleString('id-ID')}
-  Method: ${method}
-  Change: Rp${change.toLocaleString('id-ID')}
-
-Proceed?`)) {
-    return;
-  }
-
-  try {
-    const user = auth.currentUser;
-    if (!user) throw new Error("Not logged in");
-
-    // Contoh simpan ke Firestore, ke koleksi "sales"
-    // (Silakan ganti path sesuai kebutuhan)
-    await addDoc(collection(db, `users/${user.uid}/sales`), {
-      cart: cartPOS.map(item => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        qty: item.qty
-      })),
-      total,
-      paid,
-      change,
-      method,
-      date: new Date()
+async function generateInvoiceNo(db, uid) {
+    // Lokasi penyimpanan “counter” invoice, misalnya di `meta/invoiceCounter`
+    const invoiceRef = doc(db, `users/${uid}/meta`, "invoiceCounter");
+  
+    // Jalankan transaction agar aman dari benturan (race condition)
+    const invoiceNo = await runTransaction(db, async (transaction) => {
+      const counterSnap = await transaction.get(invoiceRef);
+  
+      // Dapatkan Tahun-Bulan sekarang
+      const now = new Date();
+      const year = now.getFullYear(); // ex: 2025
+      const month = String(now.getMonth() + 1).padStart(2, "0"); // ex: "01"
+  
+      const currentYearMonth = `${year}-${month}`;
+      let currentNumber = 1; // default jika belum ada data
+  
+      if (!counterSnap.exists()) {
+        // Jika belum ada doc invoiceCounter, inisialisasi
+        transaction.set(invoiceRef, {
+          currentMonth: currentYearMonth,
+          currentNumber: currentNumber
+        });
+      } else {
+        // Jika sudah ada, ambil data
+        const data = counterSnap.data();
+  
+        // Jika berganti bulan (atau tahun)
+        if (data.currentMonth !== currentYearMonth) {
+          // Reset
+          transaction.update(invoiceRef, {
+            currentMonth: currentYearMonth,
+            currentNumber: currentNumber
+          });
+        } else {
+          // Lanjutkan nomor terakhir +1
+          currentNumber = (data.currentNumber || 0) + 1;
+          transaction.update(invoiceRef, {
+            currentNumber: currentNumber
+          });
+        }
+      }
+  
+      // Bentuk string invoice => "Invoice-2025/01-0001"
+      const invoiceStr = `Invoice-${year}/${month}-${String(currentNumber).padStart(4, "0")}`;
+      return invoiceStr;
     });
-
-    alert("Transaction saved to history!");
-
-    // Kosongkan cart
-    cartPOS = [];
-    updateCartDisplay();
-
-    // Sembunyikan payment section
-    document.getElementById('payment-section').style.display = 'none';
-
-  } catch (error) {
-    console.error("Error finalizing transaction:", error);
-    alert("Error finalizing transaction: " + error.message);
+  
+    return invoiceNo; 
   }
-}
+  
+  /********************************************** 
+   * FINALIZE TRANSACTION (ganti versi lama!)
+   **********************************************/
+  async function finalizeTransaction() {
+    // ... (bagian hitung total, paid, change dsb. tetap sama)
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("Not logged in");
+  
+      // Dapatkan invoiceNo, lalu addDoc ke sales
+      const invoiceNo = await generateInvoiceNo(db, user.uid);
+      await addDoc(collection(db, `users/${user.uid}/sales`), {
+        invoiceNo,
+        cart: cartPOS.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          qty: item.qty
+        })),
+        total,
+        paid,
+        change,
+        method,
+        date: new Date()
+      });
+  
+      // (1) KURANGI STOK per item
+      for (const cartItem of cartPOS) {
+        const productRef = doc(db, `users/${user.uid}/products`, cartItem.id);
+        // Decrement stok sesuai qty
+        await updateDoc(productRef, {
+          stock: increment(-cartItem.qty)
+        });
+      }
+  
+      alert("Transaction saved to history!\nInvoice: " + invoiceNo);
+  
+      // (2) Bersihkan cart & tutup payment section
+      cartPOS = [];
+      updateCartDisplay();
+      document.getElementById('payment-section').style.display = 'none';
+  
+    } catch (error) {
+      console.error("Error finalizing transaction:", error);
+      alert("Error finalizing transaction: " + error.message);
+    }
+  }
+  
 
 /********************************************** 
  * FORMAT INPUT KE RUPIAH (OPSIONAL)
@@ -1172,98 +1213,136 @@ window.formatCurrency = function(input) {
   }
 };
 
-// Fungsi untuk menampilkan halaman Sales History
-// Menampilkan halaman Sales History dalam bentuk daftar collapsible
+
+/********************************************** 
+ * TAMPILKAN HALAMAN SALES HISTORY
+ * + TOMBOL VOID TRANSACTION
+ **********************************************/
 window.showHistory = async function() {
     const user = auth.currentUser;
     if (!user) {
-        alert("Please login first!");
-        return;
+      alert("Please login first!");
+      return;
     }
-
+  
     const content = document.getElementById('content');
     content.innerHTML = `
-        <h2>Sales History</h2>
-        <div id="salesList">Loading...</div>
+      <h2>Sales History</h2>
+      <div id="salesList">Loading...</div>
     `;
-
+  
     try {
-        const salesRef = collection(db, `users/${user.uid}/sales`);
-        const querySnapshot = await getDocs(salesRef);
-        
-        const salesList = document.getElementById('salesList');
-        if (querySnapshot.empty) {
-            salesList.innerHTML = `<p>No sales found.</p>`;
-            return;
+      const salesRef = collection(db, `users/${user.uid}/sales`);
+      const querySnapshot = await getDocs(salesRef);
+  
+      const salesList = document.getElementById('salesList');
+      if (querySnapshot.empty) {
+        salesList.innerHTML = `<p>No sales found.</p>`;
+        return;
+      }
+  
+      let html = "";
+      querySnapshot.forEach(docSnap => {
+        const sale = docSnap.data();
+        const docId = docSnap.id;
+  
+        // Format date
+        let dateStr = "";
+        if (sale.date) {
+          const saleDate = sale.date.toDate ? sale.date.toDate() : new Date(sale.date);
+          const day = String(saleDate.getDate()).padStart(2,'0');
+          const month = String(saleDate.getMonth()+1).padStart(2,'0');
+          const year = saleDate.getFullYear();
+          const hours = String(saleDate.getHours()).padStart(2,'0');
+          const minutes = String(saleDate.getMinutes()).padStart(2,'0');
+          const seconds = String(saleDate.getSeconds()).padStart(2,'0');
+  
+          dateStr = `${day}/${month}/${year}, ${hours}.${minutes}.${seconds}`;
         }
-
-        let html = "";
-        querySnapshot.forEach(docSnap => {
-            const sale = docSnap.data();
-            const docId = docSnap.id;
-
-            // Tampilkan Tanggal (jika ada)
-            let dateStr = "";
-            if (sale.date) {
-                // sale.date biasanya Firestore Timestamp
-                const saleDate = sale.date.toDate ? sale.date.toDate() : new Date(sale.date);
-                dateStr = saleDate.toLocaleString();
-            }
-
-            // Format cart items (kita masukkan di detail)
-            let cartHTML = "";
-            if (sale.cart && Array.isArray(sale.cart)) {
-                cartHTML = sale.cart.map(item => {
+  
+        // Gunakan invoiceNo (jika ada), kalau tidak ya docId
+        const invoiceDisplay = sale.invoiceNo || `Transaction ID: ${docId}`;
+  
+        html += `
+          <div class="sale-item"
+               style="
+                 background: #f9f9f9;
+                 border-radius: 5px;
+                 margin-bottom: 10px;
+                 border: 1px solid #ccc;
+                 padding: 10px;
+                 cursor: pointer;
+               "
+               onclick="toggleSaleDetail('${docId}')"
+          >
+            <h3 style="margin: 0; font-size: 16px;">
+              ${invoiceDisplay}
+            </h3>
+            <p style="font-size: 14px; color: #666;">${dateStr}</p>
+            <div id="detail-${docId}" style="display:none; margin-top:10px;">
+              <ul style="list-style: none; padding-left: 0;">
+                ${
+                  (sale.cart || []).map(item => {
                     const subTotal = (item.price * item.qty).toLocaleString('id-ID');
                     return `<li>${item.name} x ${item.qty} = Rp${subTotal}</li>`;
-                }).join("");
-            }
-
-            // Buat blok transaksi
-            // Detail awalnya hidden (display:none)
-            // Klik block -> toggleSaleDetail(docId)
-            html += `
-                <div 
-                    class="sale-item" 
-                    style="
-                        background: #f9f9f9;
-                        border-radius: 5px;
-                        margin-bottom: 10px;
-                        border: 1px solid #ccc;
-                        padding: 10px;
-                        cursor: pointer;
-                    "
-                    onclick="toggleSaleDetail('${docId}')"
-                >
-                    <h3 style="margin: 0; font-size: 16px;">
-                        Transaction ID: ${docId}
-                    </h3>
-                    <p style="font-size: 14px; color: #666;">
-                        ${dateStr}
-                    </p>
-                    <!-- Detail container -->
-                    <div id="detail-${docId}" style="display:none; margin-top:10px;">
-                        <ul style="list-style: none; padding-left: 0;">${cartHTML}</ul>
-                        <p><strong>Total:</strong> Rp${(sale.total || 0).toLocaleString('id-ID')}</p>
-                        <p><strong>Paid:</strong> Rp${(sale.paid || 0).toLocaleString('id-ID')}</p>
-                        <p><strong>Change:</strong> Rp${(sale.change || 0).toLocaleString('id-ID')}</p>
-                        <p><strong>Method:</strong> ${sale.method || ''}</p>
-                    </div>
-                </div>
-            `;
-        });
-
-        salesList.innerHTML = html;
-
+                  }).join("")
+                }
+              </ul>
+              <p><strong>Total:</strong> Rp${(sale.total || 0).toLocaleString('id-ID')}</p>
+              <p><strong>Paid:</strong> Rp${(sale.paid || 0).toLocaleString('id-ID')}</p>
+              <p><strong>Change:</strong> Rp${(sale.change || 0).toLocaleString('id-ID')}</p>
+              <p><strong>Method:</strong> ${sale.method || ''}</p>
+              <!-- TOMBOL VOID -->
+              <button 
+                onclick="voidTransaction('${docId}', event)" 
+                style="background: #f44336; color: #fff; border: none; padding: 6px 12px; cursor: pointer;">
+                Void Transaction
+              </button>
+            </div>
+          </div>
+        `;
+      });
+  
+      salesList.innerHTML = html;
+  
     } catch (error) {
-        console.error("Error fetching sales:", error);
-        const salesList = document.getElementById('salesList');
-        if (salesList) {
-            salesList.innerHTML = `<p>Error loading sales: ${error.message}</p>`;
-        }
+      console.error("Error fetching sales:", error);
+      const salesList = document.getElementById('salesList');
+      if (salesList) {
+        salesList.innerHTML = `<p>Error loading sales: ${error.message}</p>`;
+      }
     }
-};
-
+  };
+  
+  /********************************************** 
+   * VOID TRANSACTION (MENGHAPUS DARI FIRESTORE)
+   **********************************************/
+  window.voidTransaction = async function(docId, event) {
+    // Agar klik tidak juga toggle detail
+    event.stopPropagation();
+  
+    const user = auth.currentUser;
+    if (!user) {
+      alert("Please login first!");
+      return;
+    }
+  
+    if (!confirm("Are you sure you want to void this transaction?")) {
+      return;
+    }
+  
+    try {
+      await deleteDoc(doc(db, `users/${user.uid}/sales`, docId));
+      alert("Transaction voided/removed successfully!");
+  
+      // Reload history agar tampilan ter-update
+      showHistory();
+    } catch (error) {
+      console.error("Error voiding transaction:", error);
+      alert("Failed to void transaction: " + error.message);
+    }
+  };
+   
 // Fungsi toggle detail (show/hide) untuk tiap transaksi
 window.toggleSaleDetail = function(docId) {
     const detailDiv = document.getElementById(`detail-${docId}`);
@@ -1276,3 +1355,76 @@ window.toggleSaleDetail = function(docId) {
         detailDiv.style.display = 'none';
     }
 };
+
+/**********************************************
+ * TAMPILKAN HALAMAN FINANCE
+ **********************************************/
+window.showFinance = async function() {
+    const user = auth.currentUser;
+    if (!user) {
+      alert("Please login first!");
+      return;
+    }
+  
+    // Ambil semua produk untuk hitung total expense (purchasePrice * stock)
+    let totalExpense = 0;
+    let totalProducts = 0;
+  
+    try {
+      const productSnap = await getDocs(collection(db, `users/${user.uid}/products`));
+      productSnap.forEach((docSnap) => {
+        const p = docSnap.data();
+        const purchasePrice = p.purchasePrice || 0;
+        const stock = p.stock || 0;
+        totalExpense += (purchasePrice * stock);
+        totalProducts++;
+      });
+    } catch (error) {
+      console.error("Error getting products:", error);
+    }
+  
+    // Ambil semua penjualan untuk hitung total revenue & jumlah transaksi
+    let totalRevenue = 0;
+    let totalTransactions = 0;
+  
+    try {
+      const salesSnap = await getDocs(collection(db, `users/${user.uid}/sales`));
+      salesSnap.forEach((docSnap) => {
+        const s = docSnap.data();
+        totalRevenue += (s.total || 0);
+        totalTransactions++;
+      });
+    } catch (error) {
+      console.error("Error getting sales:", error);
+    }
+  
+    const profit = totalRevenue - totalExpense;
+  
+    // Tampilkan di #content
+    const content = document.getElementById('content');
+    content.innerHTML = `
+    <h2 style="font-size: 24px; margin-bottom: 20px;">Finance</h2>
+    <div class="finance-summary">
+      <div class="finance-item">
+        <span class="finance-label">Total Products</span>
+        <span class="finance-value">${totalProducts}</span>
+      </div>
+      <div class="finance-item">
+        <span class="finance-label">Total Expense</span>
+        <span class="finance-value">Rp${totalExpense.toLocaleString('id-ID')}</span>
+      </div>
+      <div class="finance-item">
+        <span class="finance-label">Number of Transactions</span>
+        <span class="finance-value">${totalTransactions}</span>
+      </div>
+      <div class="finance-item">
+        <span class="finance-label">Total Revenue</span>
+        <span class="finance-value">Rp${totalRevenue.toLocaleString('id-ID')}</span>
+      </div>
+      <div class="finance-item">
+        <span class="finance-label">Profit</span>
+        <span class="finance-value">Rp${profit.toLocaleString('id-ID')}</span>
+      </div>
+    </div>
+  `;
+  };
