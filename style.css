@@ -14,6 +14,71 @@ body, html {
     color: #333;
     overflow: hidden;
 }
+/* ===== HEADER ===== */
+.app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    height: 50px; /* Tetapkan tinggi header */
+}
+
+
+.app-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+
+/* ===== HAMBURGER MENU ===== */
+.hamburger {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px;
+}
+
+/* ===== DROPDOWN UNTUK MENU HAMBURGER ===== */
+.hamburger-menu {
+    display: none;
+    position: absolute;
+    top: 50px; 
+    left: 10px;
+    background: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 999;
+}
+
+.hamburger-menu button {
+    background: white;     /* Warna latar belakang putih */
+    color: black;          /* Warna teks hitam */
+    padding: 10px;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-size: 1rem;
+    border-radius: 8px;    /* Agar lebih halus di sudut */
+    transition: background 0.3s ease;
+}
+
+.hamburger-menu button:hover {
+    background-color: #f0f0f0; /* Warna hover abu-abu muda */
+    color: black;              /* Pastikan tetap hitam saat hover */
+}
 
 /* ==========================
    LAYOUT COMPONENTS
@@ -25,17 +90,18 @@ body, html {
     overflow-y: auto;
 }
 
+/* ===== MENGATUR KONTEN AGAR TIDAK TERTUTUP HEADER ===== */
 #content {
     width: 90%;
     max-width: 800px;
-    margin: 20px auto;
+    margin: 70px auto 20px; /* Tambahkan margin-top untuk memberi ruang di bawah header */
     padding: 20px;
     background: #ffffff;
     border-radius: 15px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     overflow-y: auto;
     padding-bottom: 70px;
-    max-height: calc(100vh - 80px);
+    max-height: calc(100vh - 130px); /* Mengurangi tinggi header & navbar */
 }
 
 .navbar {
@@ -44,14 +110,11 @@ body, html {
     width: 100%;
     background: white;
     border-top: 1px solid #ccc;
-    /* Gunakan padding yang lebih konsisten */
     padding: 10px 0;
-    
-    /* Untuk distribusi item rata */
     display: flex;
-    justify-content: space-evenly;
-    align-items: center; /* Penting untuk center vertikal */
-    z-index: 1000;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 999;
 }
 
 /* ==========================
@@ -68,23 +131,22 @@ button {
 
 /* Setiap tombol punya margin horizontal yang kecil
    supaya tidak berdempetan. */
-.nav-btn {
+   .nav-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
     background: none;
-    padding: 5px 10px; 
-    margin: 0 5px;
-    
+    padding: 5px 10px;
     font-size: 0.8rem;
     color: #004d99;
-    text-decoration: none; /* Pastikan tidak ada underline */
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 /* Ikon di atas label, beri sedikit jarak */
 .nav-btn .icon {
     font-size: 22px;
-    margin-bottom: 3px; 
+    margin-bottom: 3px;
 }
 
 .action-btn {
@@ -99,9 +161,51 @@ button {
     color: white;
 }
 
+/* Tombol Process Payment */
+/* Styling tombol tetap seperti sebelumnya */
+.process-btn {
+    background: linear-gradient(90deg, #007bff, #0056b3);
+    color: white;
+    padding: 12px 0;
+    border: none;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-bottom: 10px; /* Memberikan jarak ke tombol Cancel */
+}
+
+/* Hover Effect */
+.process-btn:hover {
+    background: linear-gradient(90deg, #0056b3, #003f7f);
+}
+
+/* Tombol Cancel */
 .cancel-btn {
     background-color: #dc3545;
     color: white;
+    padding: 12px 0;
+    border: none;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* Hover Effect untuk Cancel */
+.cancel-btn:hover {
+    background-color: #c82333; /* Warna merah lebih gelap saat hover */
+}
+
+.change-amount {
+    margin-bottom: 15px;  /* Jarak ke tombol di bawahnya */
+    font-weight: bold;
+    font-size: 16px;
+    text-align: right;    /* Memindahkan angka ke kanan */
 }
 
 #addProduct {
@@ -213,7 +317,7 @@ button:hover {
    terlalu melompat dan mengganggu layout */
 .nav-btn:hover {
     color: #003366;
-    transform: scale(1.05); /* dari 1.1 atau 1.2 -> 1.05 */
+    transform: scale(1.05);
 }
 
 .nav-btn:active {
@@ -345,4 +449,292 @@ button:hover {
     font-weight: 600;
     color: #333;
     font-size: 1rem;
+}
+/* ================================
+   MODERN CHECKOUT DESIGN
+   ================================ */
+   .checkout-container {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin: auto;
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.5s ease;
+}
+
+/* Animasi Fade In */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header Checkout */
+.checkout-container h2 {
+    text-align: center;
+    font-size: 1.5rem;
+    color: #007bff;
+    margin-bottom: 15px;
+}
+
+/* Cart Item Styling */
+.cart-item {
+    padding: 10px;
+    border-bottom: 1px solid #ddd; /* Garis pemisah antar produk */
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.cart-item:last-child {
+  border-bottom: none; /* Hilangkan garis di item terakhir */
+} 
+
+.cart-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+  
+.cart-item-header strong {
+    font-size: 16px;
+    color: #333;
+}
+
+.cart-item:hover {
+    transform: scale(1.02);
+}
+
+.cart-item img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-right: 10px;
+}
+
+/* Product Info */
+.product-details {
+    flex: 1;
+}
+
+.product-details h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: #333;
+}
+
+.product-details p {
+    margin: 3px 0;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* Quantity & Remove Button */
+.cart-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cart-item-details {
+    font-size: 14px;
+    color: #555;
+}
+  
+.qty-input {
+    width: 50px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 4px;
+    margin: 0 5px;
+  }
+
+/* Remove Button */
+.remove-btn {
+    background: #ff4d4d;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.remove-btn:hover {
+    background: #e60000;
+}
+
+/* Payment Section */
+.payment-section {
+    background-color: #f0f8ff;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.payment-section label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+    color: #007bff;
+}
+
+.payment-section input[type="text"],
+.payment-section select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    transition: border 0.3s ease;
+}
+
+.payment-section input:focus,
+.payment-section select:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+/* Checkout Button */
+.checkout-btn {
+    background: linear-gradient(90deg, #007bff, #0056b3);
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.3s, background 0.3s;
+}
+
+.checkout-btn:hover {
+    background: linear-gradient(90deg, #0056b3, #003d80);
+    transform: scale(1.03);
+}
+
+/* Total Section */
+.total-section {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-top: 10px;
+    padding: 10px;
+    background: #e6f3ff;
+    border-radius: 8px;
+}
+.inventory-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .inventory-table th, .inventory-table td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: center;
+  }
+  
+  .inventory-table th {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .inventory-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .inventory-table tr:hover {
+    background-color: #e6f7ff;
+    cursor: pointer;
+  }
+  
+  button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }
+  #salesList {
+    max-height: 400px;    /* Atur tinggi maksimum */
+    overflow-y: auto;     /* Tambahkan scroll vertikal */
+    padding-right: 10px;  /* Memberi ruang agar tidak tertutup scrollbar */
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
+}
+#filterContainer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    background-color: #f0f8ff;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    flex-wrap: wrap; /* Agar responsif */
+    justify-content: space-between;
+}
+
+.date-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#filterContainer label {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+#filterContainer input[type="date"] {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    min-width: 140px;
+}
+
+.apply-btn, .reset-btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.apply-btn {
+    background-color: #007bff;
+    color: white;
+}
+
+.apply-btn:hover {
+    background-color: #0056b3;
+}
+
+.reset-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.reset-btn:hover {
+    background-color: #b02a37;
 }

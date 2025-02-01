@@ -1,135 +1,210 @@
+// Pastikan SweetAlert2 sudah disertakan di HTML, misalnya:
+// <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 // Import Firebase SDK
 import {
-    initializeApp
-  } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
-  import {
-    getAuth,
-    GoogleAuthProvider,
-    signInWithPopup,
-    signOut,
-    onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
-  import {
-    getFirestore,
-    collection,
-    addDoc,
-    getDocs,
-    deleteDoc,
-    doc,
-    updateDoc,
-    runTransaction,
-    increment
-  } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
-  
-  // Firebase Configuration SECTION
-  const firebaseConfig = {
-    apiKey: "AIzaSyCS2k7FjEGW8ozISjE5C-TS1nVBRZwwdwU",
-    authDomain: "pos--online.firebaseapp.com",
-    projectId: "pos--online",
-    storageBucket: "pos--online.firebasestorage.app",
-    messagingSenderId: "223939358454",
-    appId: "1:223939358454:web:406b0aebc07d22723a86d7",
-    measurementId: "G-JKMHHHMTEK"
-  };
-  
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  
-  // Elements
-  const loginPage = document.getElementById("login-page");
-  const dashboard = document.getElementById("dashboard");
-  const loginBtn = document.getElementById("loginBtn");
-  
-  // Login with Google
-  loginBtn.addEventListener("click", async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      alert("Login Successful!");
-    } catch (error) {
-      console.error("Error during login:", error);
-    }
-  });
-  
-  // Handle Authentication State
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      loginPage.style.display = "none";
-      dashboard.style.display = "block";
-      loadProducts();
-    } else {
-      loginPage.style.display = "flex";
-      dashboard.style.display = "none";
-    }
-  });
-  
-  // Account Section
-  window.showAccount = () => {
-    const content = document.getElementById('content');
-    content.innerHTML = `
-      <div class="account-header">
-        <h2>${auth.currentUser.displayName || "User Name"}</h2>
-        <p>${auth.currentUser.email || "user@example.com"}</p>
-      </div>
-      <div class="account-section">
-        <h3>Account Management</h3>
-        <ul class="account-list">
-          <li onclick="editProfile()">Edit Profile <span>&rsaquo;</span></li>
-          <li onclick="changePassword()">Change Password <span>&rsaquo;</span></li>
-        </ul>
-      </div>
-      <div class="account-section">
-        <h3>Transaction History</h3>
-        <ul class="account-list">
-          <li onclick="viewTransactionHistory()">View Transactions <span>&rsaquo;</span></li>
-        </ul>
-      </div>
-    `;
-  };
-  
-  // Edit Profile
-  const editProfile = () => {
-    const content = document.getElementById('content');
-    content.innerHTML = `
-      <h2>Edit Profile</h2>
-      <form id="editProfileForm">
-        <label for="editName">Name:</label>
-        <input type="text" id="editName" value="${auth.currentUser.displayName}" required>
-        <button type="submit" class="action-btn">Save Changes</button>
-      </form>
-    `;
-  
-    const form = document.getElementById('editProfileForm');
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const newName = document.getElementById('editName').value;
-      try {
-        await auth.currentUser.updateProfile({ displayName: newName });
-        alert("Profile updated successfully!");
-        showAccount();
-      } catch (error) {
-        console.error("Error updating profile:", error);
-      }
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+  updateProfile
+} from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  getDoc,          // Tambahkan ini
+  deleteDoc,
+  setDoc,
+  doc,
+  updateDoc,
+  runTransaction,
+  increment
+} from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+
+// Firebase Configuration SECTION
+const firebaseConfig = {
+  apiKey: "AIzaSyCS2k7FjEGW8ozISjE5C-TS1nVBRZwwdwU",
+  authDomain: "pos--online.firebaseapp.com",
+  projectId: "pos--online",
+  storageBucket: "pos--online.firebasestorage.app",
+  messagingSenderId: "223939358454",
+  appId: "1:223939358454:web:406b0aebc07d22723a86d7",
+  measurementId: "G-JKMHHHMTEK"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Elements
+const loginPage = document.getElementById("login-page");
+const dashboard = document.getElementById("dashboard");
+const loginBtn = document.getElementById("loginBtn");
+
+if (loginPage && dashboard) {
+  loginPage.style.display = "none";
+  dashboard.style.display = "block";
+}
+
+// Login with Google
+loginBtn.addEventListener("click", async () => {
+  const provider = new GoogleAuthProvider();
+  try {
+    await signInWithPopup(auth, provider);
+    await Swal.fire({ icon: 'success', title: 'Login Successful!' });
+  } catch (error) {
+    console.error("Error during login:", error);
+    await Swal.fire({ icon: 'error', title: 'Login Error', text: error.message });
+  }
+});
+
+// Handle Authentication State
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginPage.style.display = "none";
+    dashboard.style.display = "block";
+    loadProducts();
+  } else {
+    loginPage.style.display = "flex";
+    dashboard.style.display = "none";
+  }
+});
+
+// Account Section
+window.showAccount = () => {
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <div class="account-header">
+      <h2>${auth.currentUser.displayName || "User Name"}</h2>
+      <p>${auth.currentUser.email || "user@example.com"}</p>
+    </div>
+
+    <div class="account-section">
+      <h3>Account Management</h3>
+      <ul class="account-list">
+        <li onclick="editProfile()">Edit Profile <span>&rsaquo;</span></li>
+        <li onclick="changePassword()">Change Password <span>&rsaquo;</span></li>
+        <li onclick="logout()" class="logout-btn">Logout <span>&#x21aa;</span></li>
+      </ul>
+    </div>
+
+    <div class="account-section">
+      <h3>Transaction History</h3>
+      <ul class="account-list">
+        <li onclick="viewTransactionHistory()">View Transactions <span>&rsaquo;</span></li>
+      </ul>
+    </div>
+  `;
+};
+
+// Fungsi Logout
+window.logout = async () => {
+  try {
+    await signOut(auth);
+    await Swal.fire({
+      icon: 'success',
+      title: 'Logged Out',
+      text: 'You have successfully logged out.',
+      timer: 1500,
+      showConfirmButton: false
     });
-  };
-  
+    // Redirect ke halaman login setelah logout
+    document.getElementById("login-page").style.display = "flex";
+    document.getElementById("content").innerHTML = "";
+  } catch (error) {
+    console.error("Logout Error:", error);
+    await Swal.fire({
+      icon: 'error',
+      title: 'Logout Failed',
+      text: error.message
+    });
+  }
+};
+
+// Fungsi Edit Profile
+window.editProfile = () => {
+  const user = auth.currentUser;
+  const content = document.getElementById('content');
+
+  content.innerHTML = `
+    <h2>Edit Profile</h2>
+    <form id="editProfileForm">
+      <label for="displayName">Name:</label>
+      <input type="text" id="displayName" value="${user.displayName || ''}" required>
+
+      <label for="email">Email (cannot be changed):</label>
+      <input type="email" id="email" value="${user.email}" disabled>
+
+      <label for="customText">Custom Text for Invoice:</label>
+      <textarea id="customText" placeholder="Enter custom text for invoices..."></textarea>
+
+      <button type="submit" class="action-btn">Save Changes</button>
+      <button type="button" class="cancel-btn" onclick="showAccount()">Cancel</button>
+    </form>
+  `;
+
+  // Ambil custom text jika sudah ada di Firestore
+  const userRef = doc(db, "users", user.uid);
+  getDoc(userRef).then((docSnap) => {
+    if (docSnap.exists()) {
+      const userData = docSnap.data();
+      document.getElementById('customText').value = userData.customText || '';
+    }
+  });
+
+  // Event untuk menyimpan perubahan
+  document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const newName = document.getElementById('displayName').value;
+    const customText = document.getElementById('customText').value;
+
+    try {
+      // Update Firebase Auth (untuk nama)
+      await updateProfile(auth.currentUser, { displayName: newName });
+
+      // Simpan Custom Text ke Firestore
+      await setDoc(userRef, { customText: customText }, { merge: true });
+
+      await Swal.fire({ icon: 'success', title: 'Profile updated successfully!' });
+      showAccount(); // Kembali ke halaman Account
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      await Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+    }
+  });
+};
+
+
 /********************************************** 
  * VARIABEL GLOBAL
  **********************************************/
 let allPOSProducts = []; // Menyimpan data produk dari Firestore
 let cartPOS = [];        // Menyimpan item yang ditambahkan ke keranjang
 let cachedProducts = []; // array untuk menampung data produk
+
 // PRODUCTS SECTION
 // ==================================================
+window.toggleMenu = function () {
+  const menu = document.getElementById('hamburgerMenu');
+  if (menu) {
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  }
+};
 
 /**********************************************
  * Menampilkan Halaman Produk
  **********************************************/
 window.showProducts = () => {
-    const content = document.getElementById('content');
-    content.innerHTML = `
+  const content = document.getElementById('content');
+  content.innerHTML = `
         <!-- Kotak pencarian tetap -->
         <div class="search-container">
             <input type="text" id="searchProduct" placeholder="Search products...">
@@ -170,79 +245,79 @@ window.showProducts = () => {
         <ul id="productList"></ul>
     `;
 
-    // Event: Search
-    document.getElementById('searchProduct').addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        const productItems = document.querySelectorAll('.product-item');
+  // Event: Search
+  document.getElementById('searchProduct').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const productItems = document.querySelectorAll('.product-item');
 
-        productItems.forEach(item => {
-            const productName = item.querySelector('h3').textContent.toLowerCase();
-            item.style.display = productName.includes(searchTerm) ? 'flex' : 'none';
-        });
+    productItems.forEach(item => {
+      const productName = item.querySelector('h3').textContent.toLowerCase();
+      item.style.display = productName.includes(searchTerm) ? 'flex' : 'none';
     });
+  });
 
-    // Event: Sort A-Z
-    document.getElementById('btnFilterAZ').addEventListener('click', () => {
-        sortProductsAZ();
-    });
+  // Event: Sort A-Z
+  document.getElementById('btnFilterAZ').addEventListener('click', () => {
+    sortProductsAZ();
+  });
 
-    // Event: Sort Z-A
-    document.getElementById('btnFilterZA').addEventListener('click', () => {
-        sortProductsZA();
-    });
+  // Event: Sort Z-A
+  document.getElementById('btnFilterZA').addEventListener('click', () => {
+    sortProductsZA();
+  });
 
-    // Event: Filter Kategori
-    const filterCategorySelect = document.getElementById('filterCategory');
-    filterCategorySelect.addEventListener('change', () => {
-        filterByCategory(filterCategorySelect.value);
-    });
+  // Event: Filter Kategori
+  const filterCategorySelect = document.getElementById('filterCategory');
+  filterCategorySelect.addEventListener('change', () => {
+    filterByCategory(filterCategorySelect.value);
+  });
 
-    // Event: Manage Categories
-    document.getElementById('manageCategoryBtn').addEventListener('click', () => {
-        showCategoryManager(); // Buat fungsi terpisah untuk mengelola kategori
-    });
+  // Event: Manage Categories
+  document.getElementById('manageCategoryBtn').addEventListener('click', () => {
+    showCategoryManager(); // Buat fungsi terpisah untuk mengelola kategori
+  });
 
-    // Panggil loadProducts dengan sedikit delay (opsional)
-    setTimeout(() => {
-        loadProducts();
-        loadCategoryOptions(); // Untuk isi <select> filter kategori
-    }, 100);
+  // Panggil loadProducts dengan sedikit delay (opsional)
+  setTimeout(() => {
+    loadProducts();
+    loadCategoryOptions(); // Untuk isi <select> filter kategori
+  }, 100);
 };
 
 async function loadCategoryOptions() {
-    const user = auth.currentUser;
-    if (!user) return;
+  const user = auth.currentUser;
+  if (!user) return;
 
-    const filterSelect = document.getElementById('filterCategory');
-    if (!filterSelect) return;
+  const filterSelect = document.getElementById('filterCategory');
+  if (!filterSelect) return;
 
-    // Kosongkan, lalu tambah "All Categories"
-    filterSelect.innerHTML = '<option value="">All Categories</option>';
+  // Kosongkan, lalu tambah "All Categories"
+  filterSelect.innerHTML = '<option value="">All Categories</option>';
 
-    const querySnapshot = await getDocs(collection(db, `users/${user.uid}/categories`));
-    querySnapshot.forEach((doc) => {
-        const catData = doc.data();
-        const option = document.createElement('option');
-        option.value = catData.name;
-        option.textContent = catData.name;
-        filterSelect.appendChild(option);
-    });
+  const querySnapshot = await getDocs(collection(db, `users/${user.uid}/categories`));
+  querySnapshot.forEach((doc) => {
+    const catData = doc.data();
+    const option = document.createElement('option');
+    option.value = catData.name;
+    option.textContent = catData.name;
+    filterSelect.appendChild(option);
+  });
 }
 
 // Fungsi menampilkan array produk ke #productList
 function renderProductList(products) {
-    const productList = document.getElementById('productList');
-    productList.innerHTML = '';
+  const productList = document.getElementById('productList');
+  productList.innerHTML = '';
 
-    if (!products || products.length === 0) {
-        productList.innerHTML = '<li>No products found.</li>';
-        return;
-    }
+  if (!products || products.length === 0) {
+    productList.innerHTML = '<li>No products found.</li>';
+    return;
+  }
 
-    products.forEach((product) => {
-        const li = document.createElement('li');
-        li.classList.add("product-item");
-        li.innerHTML = `
+  products.forEach((product) => {
+    const li = document.createElement('li');
+    li.classList.add("product-item");
+    li.innerHTML = `
             <img src="${product.imageUrl || 'default-thumbnail.png'}" class="product-image">
             <div class="product-info">
                 <h3>${product.name}</h3>
@@ -262,51 +337,54 @@ function renderProductList(products) {
                 <i class="fas fa-trash-alt"></i>
             </button>
         `;
-        productList.appendChild(li);
-    });
+    productList.appendChild(li);
+  });
 }
+
 function sortProductsAZ() {
-    // Sort ascending by product.name
-    cachedProducts.sort((a, b) => {
-        // misal compare case-insensitive
-        const nameA = a.name.toLowerCase();
-        const nameB = b.name.toLowerCase();
-        return nameA.localeCompare(nameB);
-    });
-    renderProductList(cachedProducts);
+  // Sort ascending by product.name
+  cachedProducts.sort((a, b) => {
+    // misal compare case-insensitive
+    const nameA = a.name.toLowerCase();
+    const nameB = b.name.toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+  renderProductList(cachedProducts);
 }
+
 function sortProductsZA() {
-    // Sort descending by product.name
-    cachedProducts.sort((a, b) => {
-        const nameA = a.name.toLowerCase();
-        const nameB = b.name.toLowerCase();
-        return nameB.localeCompare(nameA);
-    });
-    renderProductList(cachedProducts);
+  // Sort descending by product.name
+  cachedProducts.sort((a, b) => {
+    const nameA = a.name.toLowerCase();
+    const nameB = b.name.toLowerCase();
+    return nameB.localeCompare(nameA);
+  });
+  renderProductList(cachedProducts);
 }
+
 function filterByCategory(category) {
-    if (!category) {
-        // Tampilkan semua produk
-        renderProductList(cachedProducts);
-        return;
-    }
-    // Filter
-    const filtered = cachedProducts.filter(prod => prod.category === category);
-    renderProductList(filtered);
+  if (!category) {
+    // Tampilkan semua produk
+    renderProductList(cachedProducts);
+    return;
+  }
+  // Filter
+  const filtered = cachedProducts.filter(prod => prod.category === category);
+  renderProductList(filtered);
 }
 
 /****************************************
  * Menampilkan halaman Manage Categories
  ****************************************/
 window.showCategoryManager = function() {
-    const user = auth.currentUser;
-    if (!user) {
-        alert("Please login first!");
-        return;
-    }
+  const user = auth.currentUser;
+  if (!user) {
+    Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please login first!" });
+    return;
+  }
 
-    const content = document.getElementById('content');
-    content.innerHTML = `
+  const content = document.getElementById('content');
+  content.innerHTML = `
         <h2>Manage Categories</h2>
         <button onclick="showProducts()">Back to Products</button>
         <div id="categoryManagerContainer" style="margin-top: 20px;">
@@ -314,7 +392,7 @@ window.showCategoryManager = function() {
         </div>
     `;
 
-    loadCategoryList();
+  loadCategoryList();
 };
 
 /****************************************
@@ -322,31 +400,31 @@ window.showCategoryManager = function() {
  * dan menampilkannya dengan rapi
  ****************************************/
 async function loadCategoryList() {
-    const user = auth.currentUser;
-    if (!user) return;
+  const user = auth.currentUser;
+  if (!user) return;
 
-    const container = document.getElementById('categoryManagerContainer');
-    container.innerHTML = 'Loading...';
+  const container = document.getElementById('categoryManagerContainer');
+  container.innerHTML = 'Loading...';
 
-    try {
-        const querySnapshot = await getDocs(collection(db, `users/${user.uid}/categories`));
-        if (querySnapshot.empty) {
-            container.innerHTML = '<p>No categories found.</p>';
-            return;
-        }
+  try {
+    const querySnapshot = await getDocs(collection(db, `users/${user.uid}/categories`));
+    if (querySnapshot.empty) {
+      container.innerHTML = '<p>No categories found.</p>';
+      return;
+    }
 
-        // Bangun HTML <ul> tanpa bullet (list-style: none)
-        let html = `
+    // Bangun HTML <ul> tanpa bullet (list-style: none)
+    let html = `
             <ul id="categoryList" style="list-style-type: none; padding: 0; margin: 0;">
         `;
 
-        querySnapshot.forEach((docSnap) => {
-            const catData = docSnap.data();
-            const docId = docSnap.id;
-            const catName = catData.name;
+    querySnapshot.forEach((docSnap) => {
+      const catData = docSnap.data();
+      const docId = docSnap.id;
+      const catName = catData.name;
 
-            // Gunakan flexbox di <li> supaya nama di kiri & tombol di kanan
-            html += `
+      // Gunakan flexbox di <li> supaya nama di kiri & tombol di kanan
+      html += `
                 <li 
                     style="
                         display: flex; 
@@ -365,71 +443,90 @@ async function loadCategoryList() {
                     </div>
                 </li>
             `;
-        });
+    });
 
-        html += `</ul>`;
+    html += `</ul>`;
 
-        container.innerHTML = html;
-    } catch (error) {
-        console.error("Error loading categories:", error);
-        container.innerHTML = `<p>Error loading categories: ${error.message}</p>`;
-    }
+    container.innerHTML = html;
+  } catch (error) {
+    console.error("Error loading categories:", error);
+    container.innerHTML = `<p>Error loading categories: ${error.message}</p>`;
+  }
 }
 
 /****************************************
  * Menghapus kategori (harus global/di-attach ke window)
  ****************************************/
 window.deleteCategory = async function(categoryId) {
-    const user = auth.currentUser;
-    if (!user) return;
+  const user = auth.currentUser;
+  if (!user) return;
 
-    if (!confirm("Are you sure you want to delete this category?")) return;
+  const result = await Swal.fire({
+    title: "Are you sure?",
+    text: "Are you sure you want to delete this category?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Yes, delete it!",
+    cancelButtonText: "Cancel"
+  });
+  if (!result.isConfirmed) return;
 
-    try {
-        await deleteDoc(doc(db, `users/${user.uid}/categories`, categoryId));
-        alert("Category deleted successfully!");
-        loadCategoryList(); // Refresh daftar
-    } catch (error) {
-        console.error("Error deleting category:", error);
-    }
+  try {
+    await deleteDoc(doc(db, `users/${user.uid}/categories`, categoryId));
+    await Swal.fire({ icon: 'success', title: 'Category deleted successfully!' });
+    loadCategoryList(); // Refresh daftar
+  } catch (error) {
+    console.error("Error deleting category:", error);
+    await Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+  }
 };
 
 /****************************************
  * Prompt Edit Category Name 
  ****************************************/
-window.editCategoryPrompt = function(categoryId, oldName) {
-    const newName = prompt("Edit Category Name:", oldName);
-    if (!newName || newName.trim() === "") return;
-
+window.editCategoryPrompt = async function(categoryId, oldName) {
+  const { value: newName } = await Swal.fire({
+    title: "Edit Category Name",
+    input: 'text',
+    inputLabel: 'Category Name',
+    inputValue: oldName,
+    showCancelButton: true,
+    confirmButtonText: "Save",
+    cancelButtonText: "Cancel",
+    inputValidator: (value) => {
+      if (!value || value.trim() === "") {
+        return 'Please enter a valid category name!';
+      }
+    }
+  });
+  if (newName) {
     updateCategory(categoryId, newName.trim());
+  }
 };
 
 /****************************************
  * Update Category Name di Firestore
  ****************************************/
 async function updateCategory(categoryId, newName) {
-    const user = auth.currentUser;
-    if (!user) return;
+  const user = auth.currentUser;
+  if (!user) return;
 
-    try {
-        await updateDoc(doc(db, `users/${user.uid}/categories`, categoryId), { name: newName });
-        alert("Category updated successfully!");
-        loadCategoryList();
-    } catch (error) {
-        console.error("Error updating category:", error);
-    }
+  try {
+    await updateDoc(doc(db, `users/${user.uid}/categories`, categoryId), { name: newName });
+    await Swal.fire({ icon: 'success', title: 'Category updated successfully!' });
+    loadCategoryList();
+  } catch (error) {
+    console.error("Error updating category:", error);
+    await Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+  }
 }
-
-
-
-
 
 /**********************************************
  * Menampilkan Form Tambah Produk
  **********************************************/
 window.addProductForm = () => {
-    const content = document.getElementById('content');
-    content.innerHTML = `
+  const content = document.getElementById('content');
+  content.innerHTML = `
         <div class="form-container">
             <h2>Add New Product</h2>
             <form id="addProductForm">
@@ -468,47 +565,47 @@ window.addProductForm = () => {
         </div>
     `;
 
-    // Panggil fungsi memuat kategori dan setup form
-    loadCategories();
-    setupProductForm();
+  // Panggil fungsi memuat kategori dan setup form
+  loadCategories();
+  setupProductForm();
 
-    // Tambahkan event ke tombol "Cancel" agar kembali ke showProducts()
-    document.getElementById('cancelAddBtn').addEventListener('click', () => {
-        showProducts();
-    });
+  // Tambahkan event ke tombol "Cancel" agar kembali ke showProducts()
+  document.getElementById('cancelAddBtn').addEventListener('click', () => {
+    showProducts();
+  });
 };
 
 /**********************************************
  * Mengambil & Menampilkan Daftar Produk (beserta ikon Edit/Delete)
  **********************************************/
 const loadProducts = async () => {
-    const user = auth.currentUser;
-    if (!user) {
-        alert("Please login first!");
-        return;
+  const user = auth.currentUser;
+  if (!user) {
+    await Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please login first!" });
+    return;
+  }
+
+  const productList = document.getElementById('productList');
+  productList.innerHTML = '';
+
+  try {
+    const querySnapshot = await getDocs(collection(db, `users/${user.uid}/products`));
+    cachedProducts = []; // kosongkan
+    querySnapshot.forEach((doc) => {
+      const product = doc.data();
+      product.docId = doc.id;
+      cachedProducts.push(product);
+    });
+
+    if (cachedProducts.length === 0) {
+      productList.innerHTML = '<li>No products found.</li>';
+    } else {
+      // Tampilkan
+      renderProductList(cachedProducts);
     }
-
-    const productList = document.getElementById('productList');
-    productList.innerHTML = '';
-
-    try {
-        const querySnapshot = await getDocs(collection(db, `users/${user.uid}/products`));
-        cachedProducts = []; // kosongkan
-        querySnapshot.forEach((doc) => {
-            const product = doc.data();
-            product.docId = doc.id;
-            cachedProducts.push(product);
-        });
-
-        if (cachedProducts.length === 0) {
-            productList.innerHTML = '<li>No products found.</li>';
-        } else {
-            // Tampilkan
-            renderProductList(cachedProducts);
-        }
-    } catch (error) {
-        console.error("Error loading products:", error);
-    }
+  } catch (error) {
+    console.error("Error loading products:", error);
+  }
 };
 
 /**********************************************
@@ -516,17 +613,17 @@ const loadProducts = async () => {
  **********************************************/
 // Edit Product Function
 window.editProduct = (
-    productId, 
-    name, 
-    price, 
-    stock, 
-    description, 
-    imageUrl, 
-    category = "", 
-    purchasePrice = ""
+  productId, 
+  name, 
+  price, 
+  stock, 
+  description, 
+  imageUrl, 
+  category = "", 
+  purchasePrice = ""
 ) => {
-    const content = document.getElementById('content');
-    content.innerHTML = `
+  const content = document.getElementById('content');
+  content.innerHTML = `
         <div class="form-container">
             <h2>Edit Product</h2>
             <form id="editProductForm">
@@ -568,51 +665,52 @@ window.editProduct = (
         </div>
     `;
 
-    // Load daftar kategori ke dropdown
-    loadEditCategories(category);
+  // Load daftar kategori ke dropdown
+  loadEditCategories(category);
 
-    // Event: Tambah kategori baru
-    document.getElementById('addNewCategoryEditBtn')
-            .addEventListener('click', addNewCategoryEdit);
+  // Event: Tambah kategori baru
+  document.getElementById('addNewCategoryEditBtn')
+    .addEventListener('click', addNewCategoryEdit);
 
-    // Event: Cancel => kembali ke showProducts()
-    document.getElementById('cancelEditBtn').addEventListener('click', () => {
-        showProducts();
-    });
+  // Event: Cancel => kembali ke showProducts()
+  document.getElementById('cancelEditBtn').addEventListener('click', () => {
+    showProducts();
+  });
 
-    // Form submit => update data Firestore
-    const form = document.getElementById('editProductForm');
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const user = auth.currentUser;
-        if (!user) {
-            alert("Please login first!");
-            return;
-        }
+  // Form submit => update data Firestore
+  const form = document.getElementById('editProductForm');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const user = auth.currentUser;
+    if (!user) {
+      await Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please login first!" });
+      return;
+    }
 
-        const updatedName = document.getElementById('editProductName').value;
-        const updatedPrice = parseInt(document.getElementById('editProductPrice').value.replace(/\./g, ''));
-        const updatedPurchasePrice = parseInt(document.getElementById('editPurchasePrice').value.replace(/\./g, ''));
-        const updatedStock = parseInt(document.getElementById('editStock').value);
-        const updatedDescription = document.getElementById('editDescription').value;
-        const updatedCategory = document.getElementById('editCategoryDropdown').value;
+    const updatedName = document.getElementById('editProductName').value;
+    const updatedPrice = parseInt(document.getElementById('editProductPrice').value.replace(/\./g, ''));
+    const updatedPurchasePrice = parseInt(document.getElementById('editPurchasePrice').value.replace(/\./g, ''));
+    const updatedStock = parseInt(document.getElementById('editStock').value);
+    const updatedDescription = document.getElementById('editDescription').value;
+    const updatedCategory = document.getElementById('editCategoryDropdown').value;
 
-        try {
-            await updateDoc(doc(db, `users/${user.uid}/products`, productId), {
-                name: updatedName,
-                price: updatedPrice,
-                purchasePrice: updatedPurchasePrice,
-                stock: updatedStock,
-                description: updatedDescription,
-                category: updatedCategory
-            });
+    try {
+      await updateDoc(doc(db, `users/${user.uid}/products`, productId), {
+        name: updatedName,
+        price: updatedPrice,
+        purchasePrice: updatedPurchasePrice,
+        stock: updatedStock,
+        description: updatedDescription,
+        category: updatedCategory
+      });
 
-            alert("Product updated successfully!");
-            showProducts();
-        } catch (error) {
-            console.error("Error updating product:", error);
-        }
-    });
+      await Swal.fire({ icon: 'success', title: 'Product updated successfully!' });
+      showProducts();
+    } catch (error) {
+      console.error("Error updating product:", error);
+      await Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+    }
+  });
 };
 
 /**
@@ -620,223 +718,230 @@ window.editProduct = (
  * lalu set value-nya sesuai kategori produk saat ini (jika ada).
  */
 async function loadEditCategories(currentCategory) {
-    const user = auth.currentUser;
-    if (!user) return;
+  const user = auth.currentUser;
+  if (!user) return;
 
-    const editCategoryDropdown = document.getElementById("editCategoryDropdown");
-    editCategoryDropdown.innerHTML = '<option value="" disabled>Select category</option>';
+  const editCategoryDropdown = document.getElementById("editCategoryDropdown");
+  editCategoryDropdown.innerHTML = '<option value="" disabled>Select category</option>';
 
-    try {
-        // Ambil list categories
-        const querySnapshot = await getDocs(collection(db, `users/${user.uid}/categories`));
-        let foundSelected = false;
-        querySnapshot.forEach((docSnap) => {
-            const catData = docSnap.data();
-            const option = document.createElement("option");
-            option.value = catData.name;
-            option.textContent = catData.name;
+  try {
+    // Ambil list categories
+    const querySnapshot = await getDocs(collection(db, `users/${user.uid}/categories`));
+    let foundSelected = false;
+    querySnapshot.forEach((docSnap) => {
+      const catData = docSnap.data();
+      const option = document.createElement("option");
+      option.value = catData.name;
+      option.textContent = catData.name;
 
-            // Jika catData.name sama dengan kategori saat ini, tandai selected
-            if (currentCategory && catData.name === currentCategory) {
-                option.selected = true;
-                foundSelected = true;
-            }
-            editCategoryDropdown.appendChild(option);
-        });
+      // Jika catData.name sama dengan kategori saat ini, tandai selected
+      if (currentCategory && catData.name === currentCategory) {
+        option.selected = true;
+        foundSelected = true;
+      }
+      editCategoryDropdown.appendChild(option);
+    });
 
-        // Kalau tidak menemukan kategori lama (bisa karena dihapus),
-        // atau currentCategory kosong, biarkan user pilih.
-        // Atau set saja selectedIndex = 0 agar tetap "Select category"
-        if (!foundSelected && currentCategory) {
-            // Tambahkan satu option agar user tahu kategori lamanya terhapus
-            const missingOption = document.createElement("option");
-            missingOption.value = currentCategory;
-            missingOption.textContent = `${currentCategory} (not found in list)`;
-            missingOption.selected = true;
-            editCategoryDropdown.appendChild(missingOption);
-        }
-    } catch (error) {
-        console.error("Error loading categories:", error);
+    // Kalau tidak menemukan kategori lama (bisa karena dihapus),
+    // atau currentCategory kosong, biarkan user pilih.
+    // Atau set saja selectedIndex = 0 agar tetap "Select category"
+    if (!foundSelected && currentCategory) {
+      // Tambahkan satu option agar user tahu kategori lamanya terhapus
+      const missingOption = document.createElement("option");
+      missingOption.value = currentCategory;
+      missingOption.textContent = `${currentCategory} (not found in list)`;
+      missingOption.selected = true;
+      editCategoryDropdown.appendChild(missingOption);
     }
+  } catch (error) {
+    console.error("Error loading categories:", error);
+  }
 }
+
 /**
  * Menambahkan kategori baru via form Edit Product
  * (sama logikanya seperti addNewCategory, tapi ID field beda)
  */
 window.addNewCategoryEdit = async function() {
-    const user = auth.currentUser;
-    if (!user) return;
+  const user = auth.currentUser;
+  if (!user) return;
 
-    const newCategoryInput = document.getElementById('newCategoryEdit');
-    const editCategoryDropdown = document.getElementById('editCategoryDropdown');
-    const newCategory = newCategoryInput.value.trim();
+  const newCategoryInput = document.getElementById('newCategoryEdit');
+  const editCategoryDropdown = document.getElementById('editCategoryDropdown');
+  const newCategory = newCategoryInput.value.trim();
 
-    if (!newCategory) {
-        alert("Please enter a valid category name.");
-        return;
-    }
+  if (!newCategory) {
+    await Swal.fire({ icon: 'warning', title: 'Invalid Category', text: "Please enter a valid category name." });
+    return;
+  }
 
-    try {
-        // Tambahkan ke Firestore
-        await addDoc(collection(db, `users/${user.uid}/categories`), {
-            name: newCategory
-        });
+  try {
+    // Tambahkan ke Firestore
+    await addDoc(collection(db, `users/${user.uid}/categories`), {
+      name: newCategory
+    });
 
-        // Tambahkan option ke dropdown
-        const newOption = document.createElement('option');
-        newOption.value = newCategory;
-        newOption.textContent = newCategory;
-        editCategoryDropdown.appendChild(newOption);
+    // Tambahkan option ke dropdown
+    const newOption = document.createElement('option');
+    newOption.value = newCategory;
+    newOption.textContent = newCategory;
+    editCategoryDropdown.appendChild(newOption);
 
-        // Set dropdown ke kategori baru
-        editCategoryDropdown.value = newCategory;
-        newCategoryInput.value = '';
+    // Set dropdown ke kategori baru
+    editCategoryDropdown.value = newCategory;
+    newCategoryInput.value = '';
 
-        alert("Category added successfully!");
-    } catch (error) {
-        console.error("Error adding category:", error);
-    }
+    await Swal.fire({ icon: 'success', title: 'Category added successfully!' });
+  } catch (error) {
+    console.error("Error adding category:", error);
+    await Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+  }
 };
-
 
 /**********************************************
  * Menghapus Produk
  **********************************************/
 window.deleteProduct = async function(productId) {
-    const user = auth.currentUser;
-    if (!user) {
-        alert("Please login first!");
-        return;
-    }
+  const user = auth.currentUser;
+  if (!user) {
+    await Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please login first!" });
+    return;
+  }
 
-    if (confirm("Are you sure you want to delete this product?")) {
-        try {
-            await deleteDoc(doc(db, `users/${user.uid}/products`, productId));
-            alert("Product deleted successfully!");
-            loadProducts(); // Refresh daftar produk setelah penghapusan
-        } catch (error) {
-            console.error("Error deleting product:", error);
-        }
-    }
+  const result = await Swal.fire({
+    title: "Are you sure?",
+    text: "Are you sure you want to delete this product?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Yes, delete it!",
+    cancelButtonText: "Cancel"
+  });
+  if (!result.isConfirmed) return;
+
+  try {
+    await deleteDoc(doc(db, `users/${user.uid}/products`, productId));
+    await Swal.fire({ icon: 'success', title: 'Product deleted successfully!' });
+    loadProducts(); // Refresh daftar produk setelah penghapusan
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    await Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+  }
 };
 
 /**********************************************
  * Menyiapkan Form Tambah Produk (Upload Gambar, dsb.)
  **********************************************/
 function setupProductForm() {
-    // Preview gambar saat file diinput
-    document.getElementById('productImage').addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('imagePreview').src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
+  // Preview gambar saat file diinput
+  document.getElementById('productImage').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('imagePreview').src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
 
-    // Event submit form untuk menambahkan produk ke Firestore
-    const form = document.getElementById('addProductForm');
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const user = auth.currentUser;
-        if (!user) {
-            alert("Please log in first!");
-            return;
-        }
+  // Event submit form untuk menambahkan produk ke Firestore
+  const form = document.getElementById('addProductForm');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const user = auth.currentUser;
+    if (!user) {
+      await Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please log in first!" });
+      return;
+    }
 
-        const name = document.getElementById('productName').value;
-        const price = parseInt(document.getElementById('productPrice').value.replace(/\./g, ''));
-        const purchasePrice = parseInt(document.getElementById('purchasePrice').value.replace(/\./g, ''));
-        const stock = parseInt(document.getElementById('stock').value);
-        const description = document.getElementById('description').value;
-        let category = document.getElementById('categoryDropdown').value;
-        let imageUrl = document.getElementById('imagePreview').src;
+    const name = document.getElementById('productName').value;
+    const price = parseInt(document.getElementById('productPrice').value.replace(/\./g, ''));
+    const purchasePrice = parseInt(document.getElementById('purchasePrice').value.replace(/\./g, ''));
+    const stock = parseInt(document.getElementById('stock').value);
+    const description = document.getElementById('description').value;
+    let category = document.getElementById('categoryDropdown').value;
+    let imageUrl = document.getElementById('imagePreview').src;
 
-        if (!name || price <= 0 || stock < 0) {
-            alert("Please enter valid product details.");
-            return;
-        }
+    if (!name || price <= 0 || stock < 0) {
+      await Swal.fire({ icon: 'warning', title: 'Invalid Product Details', text: "Please enter valid product details." });
+      return;
+    }
 
-        try {
-            await addDoc(collection(db, `users/${user.uid}/products`), {
-                name,
-                price,
-                purchasePrice,
-                stock,
-                description,
-                category,
-                imageUrl
-            });
+    try {
+      await addDoc(collection(db, `users/${user.uid}/products`), {
+        name,
+        price,
+        purchasePrice,
+        stock,
+        description,
+        category,
+        imageUrl
+      });
 
-            alert("Product added successfully!");
-            showProducts();
-        } catch (error) {
-            console.error("Error adding product:", error);
-        }
-    });
+      await Swal.fire({ icon: 'success', title: 'Product added successfully!' });
+      showProducts();
+    } catch (error) {
+      console.error("Error adding product:", error);
+      await Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+    }
+  });
 }
 
 /**********************************************
  * Memuat Daftar Kategori dari Firestore
  **********************************************/
 async function loadCategories() {
-    const user = auth.currentUser;
-    if (!user) return;
+  const user = auth.currentUser;
+  if (!user) return;
 
-    const categoryDropdown = document.getElementById("categoryDropdown");
-    categoryDropdown.innerHTML = '<option value="" disabled>Select category</option>';
+  const categoryDropdown = document.getElementById("categoryDropdown");
+  categoryDropdown.innerHTML = '<option value="" disabled>Select category</option>';
 
-    const querySnapshot = await getDocs(collection(db, `users/${user.uid}/categories`));
-    querySnapshot.forEach((doc) => {
-        const category = doc.data().name;
-        const option = document.createElement("option");
-        option.value = category;
-        option.textContent = category;
-        categoryDropdown.appendChild(option);
-    });
+  const querySnapshot = await getDocs(collection(db, `users/${user.uid}/categories`));
+  querySnapshot.forEach((doc) => {
+    const category = doc.data().name;
+    const option = document.createElement("option");
+    option.value = category;
+    option.textContent = category;
+    categoryDropdown.appendChild(option);
+  });
 }
 
 /**********************************************
  * Menambahkan Kategori Baru
  **********************************************/
 window.addNewCategory = async function() {
-    const user = auth.currentUser;
-    if (!user) return;
+  const user = auth.currentUser;
+  if (!user) return;
 
-    const newCategoryInput = document.getElementById('newCategory');
-    const categoryDropdown = document.getElementById('categoryDropdown');
-    const newCategory = newCategoryInput.value.trim();
+  const newCategoryInput = document.getElementById('newCategory');
+  const categoryDropdown = document.getElementById('categoryDropdown');
+  const newCategory = newCategoryInput.value.trim();
 
-    if (!newCategory) return;
+  if (!newCategory) return;
 
-    try {
-        await addDoc(collection(db, `users/${user.uid}/categories`), { name: newCategory });
-        const newOption = document.createElement('option');
-        newOption.value = newCategory;
-        newOption.textContent = newCategory;
-        categoryDropdown.appendChild(newOption);
-        categoryDropdown.value = newCategory;
-        newCategoryInput.value = '';
-    } catch (error) {
-        console.error("Error adding category:", error);
-    }
+  try {
+    await addDoc(collection(db, `users/${user.uid}/categories`), { name: newCategory });
+    const newOption = document.createElement('option');
+    newOption.value = newCategory;
+    newOption.textContent = newCategory;
+    categoryDropdown.appendChild(newOption);
+    categoryDropdown.value = newCategory;
+    newCategoryInput.value = '';
+  } catch (error) {
+    console.error("Error adding category:", error);
+  }
 };
 
 /**********************************************
  * Format Harga ke Rupiah
  **********************************************/
 window.formatCurrency = function(input) {
-    let value = input.value.replace(/\D/g, "");
-    if (value) {
-        input.value = parseInt(value).toLocaleString("id-ID");
-    }
+  let value = input.value.replace(/\D/g, "");
+  if (value) {
+    input.value = parseInt(value).toLocaleString("id-ID");
+  }
 };
-
-
-  
-
 
 /********************************************** 
  * AMBIL DATA PRODUK DARI FIRESTORE
@@ -962,14 +1067,19 @@ function updateCartDisplay() {
     total += subTotal;
 
     const itemRow = document.createElement('div');
-    itemRow.style.marginBottom = '10px';
+    itemRow.classList.add('cart-item'); // Tambahkan class untuk styling
     itemRow.innerHTML = `
-      <strong>${item.name}</strong><br>
-      Rp${parseInt(item.price).toLocaleString('id-ID')} x 
-      <input type="number" min="1" value="${item.qty}" style="width:50px" class="qty-input">
-      = Rp${subTotal.toLocaleString('id-ID')}
-      <br>
-      <button class="remove-btn">Remove</button>
+      <div class="cart-item-header">
+        <strong>${item.name}</strong>
+        <button class="remove-btn" title="Remove" onclick="removeFromCart(${index})">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </div>
+      <div class="cart-item-details">
+        Rp${parseInt(item.price).toLocaleString('id-ID')} x 
+        <input type="number" min="1" value="${item.qty}" class="qty-input">
+        = Rp${subTotal.toLocaleString('id-ID')}
+      </div>
     `;
 
     // Ubah qty
@@ -981,18 +1091,18 @@ function updateCartDisplay() {
       updateCartDisplay();
     });
 
-    // Remove
-    const removeBtn = itemRow.querySelector('.remove-btn');
-    removeBtn.addEventListener('click', () => {
-      cartPOS.splice(index, 1);
-      updateCartDisplay();
-    });
-
     cartDiv.appendChild(itemRow);
   });
 
   totalEl.textContent = total.toLocaleString('id-ID');
 }
+
+// Fungsi untuk menghapus item dari cart
+window.removeFromCart = function(index) {
+  cartPOS.splice(index, 1); // Hapus item dari cart berdasarkan index
+  updateCartDisplay();      // Perbarui tampilan cart setelah item dihapus
+};
+
 
 /********************************************** 
  * TAMPILKAN HALAMAN POS
@@ -1000,49 +1110,73 @@ function updateCartDisplay() {
 window.showPOS = async function() {
   const user = auth.currentUser;
   if (!user) {
-    alert("Please login first!");
+    await Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please login first!" });
     return;
   }
 
-  // Siapkan layout POS di #content
   const content = document.getElementById('content');
   content.innerHTML = `
-    <h2>New Transaction</h2>
-    <div class="search-container">
-      <input type="text" id="posSearchProduct" placeholder="Search product...">
-    </div>
-
-    <!-- Daftar produk yang akan diisi jika user ketik search -->
-    <div id="pos-product-list" style="margin-top:10px;"></div>
-
-    <h3>Cart</h3>
-    <div id="pos-cart"></div>
-    <p>Total: <span id="pos-total">0</span></p>
-    <button id="pos-checkout-btn">Checkout</button>
-
-    <!-- Bagian Payment (Modal/Section) -->
-    <div id="payment-section" style="display: none; margin-top: 10px; border:1px solid #ccc; padding:10px;">
-      <h3>Payment Confirmation</h3>
-      <p>Total: <span id="paymentTotal"></span></p>
-
-      <label for="paymentMethod">Payment Method:</label>
-      <select id="paymentMethod">
-        <option value="cash">Cash</option>
-        <option value="card">Card</option>
-        <option value="ewallet">E-Wallet</option>
-      </select>
-      <br><br>
-
-      <label for="amountPaid">Amount Paid (Rp):</label>
-      <input type="text" id="amountPaid" oninput="formatCurrency(this)">
-      <br><br>
-
-      <p>Change: <span id="paymentChange">0</span></p>
-
-      <button id="processPaymentBtn">Process</button>
-      <button id="cancelPaymentBtn">Cancel</button>
+    <div class="checkout-container">
+      <h2>New Transaction</h2>
+  
+      <!-- Search Product Section -->
+      <div class="search-container">
+        <input type="text" id="posSearchProduct" placeholder="Search product...">
+      </div>
+  
+      <!-- Product List -->
+      <div id="pos-product-list" style="margin-top:10px;"></div>
+  
+      <!-- Cart Section -->
+      <h3>Cart</h3>
+      <div id="pos-cart" class="cart-container"></div>
+  
+      <!-- Total Section -->
+      <div class="total-section">
+        <span>Total:</span>
+        <span id="pos-total">Rp0</span>
+      </div>
+  
+      <!-- Checkout Button -->
+      <button id="pos-checkout-btn" class="checkout-btn">Checkout</button>
+  
+      <!-- Payment Section (Hidden by Default) -->
+      <div id="payment-section" class="payment-section" style="display: none;">
+        <h3>Payment Confirmation</h3>
+  
+        <div class="payment-info">
+          <label for="paymentTotal">Total:</label>
+          <p id="paymentTotal" class="payment-amount">Rp0</p>
+        </div>
+  
+        <div class="form-group">
+          <label for="paymentMethod">Payment Method:</label>
+          <select id="paymentMethod">
+            <option value="cash">Cash</option>
+            <option value="card">Credit Card</option>
+            <option value="ewallet">E-Wallet</option>
+          </select>
+        </div>
+  
+        <div class="form-group">
+          <label for="amountPaid">Amount Paid (Rp):</label>
+          <input type="text" id="amountPaid" oninput="formatCurrency(this)" placeholder="Enter payment amount">
+        </div>
+  
+        <div class="form-group">
+          <label>Change:</label>
+          <p id="paymentChange" class="change-amount">Rp0</p>
+        </div>
+  
+        <!-- Action Buttons -->
+        <div class="button-group">
+          <button id="processPaymentBtn" class="process-btn">Process Payment</button>
+          <button id="cancelPaymentBtn" class="cancel-btn">Cancel</button>
+        </div>
+      </div>
     </div>
   `;
+  
 
   // Ambil data produk dulu, lalu tunggu
   await loadPOSProducts();
@@ -1055,7 +1189,7 @@ window.showPOS = async function() {
   const checkoutBtn = document.getElementById('pos-checkout-btn');
   checkoutBtn.addEventListener('click', () => {
     if (cartPOS.length === 0) {
-      alert("Cart is empty!");
+      Swal.fire({ icon: 'warning', title: 'Empty Cart', text: "Cart is empty!" });
       return;
     }
     // Munculkan section pembayaran
@@ -1105,103 +1239,110 @@ function calculateChange() {
  * BUAT/MUAT NOMOR INVOICE
  **********************************************/
 async function generateInvoiceNo(db, uid) {
-    // Lokasi penyimpanan “counter” invoice, misalnya di `meta/invoiceCounter`
-    const invoiceRef = doc(db, `users/${uid}/meta`, "invoiceCounter");
-  
-    // Jalankan transaction agar aman dari benturan (race condition)
-    const invoiceNo = await runTransaction(db, async (transaction) => {
-      const counterSnap = await transaction.get(invoiceRef);
-  
-      // Dapatkan Tahun-Bulan sekarang
-      const now = new Date();
-      const year = now.getFullYear(); // ex: 2025
-      const month = String(now.getMonth() + 1).padStart(2, "0"); // ex: "01"
-  
-      const currentYearMonth = `${year}-${month}`;
-      let currentNumber = 1; // default jika belum ada data
-  
-      if (!counterSnap.exists()) {
-        // Jika belum ada doc invoiceCounter, inisialisasi
-        transaction.set(invoiceRef, {
+  // Lokasi penyimpanan “counter” invoice, misalnya di `meta/invoiceCounter`
+  const invoiceRef = doc(db, `users/${uid}/meta`, "invoiceCounter");
+
+  // Jalankan transaction agar aman dari benturan (race condition)
+  const invoiceNo = await runTransaction(db, async (transaction) => {
+    const counterSnap = await transaction.get(invoiceRef);
+
+    // Dapatkan Tahun-Bulan sekarang
+    const now = new Date();
+    const year = now.getFullYear(); // ex: 2025
+    const month = String(now.getMonth() + 1).padStart(2, "0"); // ex: "01"
+
+    const currentYearMonth = `${year}-${month}`;
+    let currentNumber = 1; // default jika belum ada data
+
+    if (!counterSnap.exists()) {
+      // Jika belum ada doc invoiceCounter, inisialisasi
+      transaction.set(invoiceRef, {
+        currentMonth: currentYearMonth,
+        currentNumber: currentNumber
+      });
+    } else {
+      // Jika sudah ada, ambil data
+      const data = counterSnap.data();
+
+      // Jika berganti bulan (atau tahun)
+      if (data.currentMonth !== currentYearMonth) {
+        // Reset
+        transaction.update(invoiceRef, {
           currentMonth: currentYearMonth,
           currentNumber: currentNumber
         });
       } else {
-        // Jika sudah ada, ambil data
-        const data = counterSnap.data();
-  
-        // Jika berganti bulan (atau tahun)
-        if (data.currentMonth !== currentYearMonth) {
-          // Reset
-          transaction.update(invoiceRef, {
-            currentMonth: currentYearMonth,
-            currentNumber: currentNumber
-          });
-        } else {
-          // Lanjutkan nomor terakhir +1
-          currentNumber = (data.currentNumber || 0) + 1;
-          transaction.update(invoiceRef, {
-            currentNumber: currentNumber
-          });
-        }
-      }
-  
-      // Bentuk string invoice => "Invoice-2025/01-0001"
-      const invoiceStr = `Invoice-${year}/${month}-${String(currentNumber).padStart(4, "0")}`;
-      return invoiceStr;
-    });
-  
-    return invoiceNo; 
-  }
-  
-  /********************************************** 
-   * FINALIZE TRANSACTION (ganti versi lama!)
-   **********************************************/
-  async function finalizeTransaction() {
-    // ... (bagian hitung total, paid, change dsb. tetap sama)
-    try {
-      const user = auth.currentUser;
-      if (!user) throw new Error("Not logged in");
-  
-      // Dapatkan invoiceNo, lalu addDoc ke sales
-      const invoiceNo = await generateInvoiceNo(db, user.uid);
-      await addDoc(collection(db, `users/${user.uid}/sales`), {
-        invoiceNo,
-        cart: cartPOS.map(item => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          qty: item.qty
-        })),
-        total,
-        paid,
-        change,
-        method,
-        date: new Date()
-      });
-  
-      // (1) KURANGI STOK per item
-      for (const cartItem of cartPOS) {
-        const productRef = doc(db, `users/${user.uid}/products`, cartItem.id);
-        // Decrement stok sesuai qty
-        await updateDoc(productRef, {
-          stock: increment(-cartItem.qty)
+        // Lanjutkan nomor terakhir +1
+        currentNumber = (data.currentNumber || 0) + 1;
+        transaction.update(invoiceRef, {
+          currentNumber: currentNumber
         });
       }
-  
-      alert("Transaction saved to history!\nInvoice: " + invoiceNo);
-  
-      // (2) Bersihkan cart & tutup payment section
-      cartPOS = [];
-      updateCartDisplay();
-      document.getElementById('payment-section').style.display = 'none';
-  
-    } catch (error) {
-      console.error("Error finalizing transaction:", error);
-      alert("Error finalizing transaction: " + error.message);
     }
+
+    // Bentuk string invoice => "Invoice-2025/01-0001"
+    const invoiceStr = `Invoice-${year}/${month}-${String(currentNumber).padStart(4, "0")}`;
+    return invoiceStr;
+  });
+
+  return invoiceNo;
+}
+
+/********************************************** 
+ * FINALIZE TRANSACTION (ganti versi lama!)
+ **********************************************/
+async function finalizeTransaction() {
+  try {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Not logged in");
+
+    // Dapatkan invoiceNo, lalu addDoc ke sales
+    const invoiceNo = await generateInvoiceNo(db, user.uid);
+    // Ambil nilai total, paid, change, dan method dari tampilan POS
+    const totalText = document.getElementById('pos-total').textContent;
+    const total = parseInt(totalText.replace(/\./g, '')) || 0;
+    let paidText = document.getElementById('amountPaid').value.replace(/\./g, '');
+    const paid = parseInt(paidText) || 0;
+    const changeText = document.getElementById('paymentChange').textContent;
+    const change = parseInt(changeText.replace(/\./g, '')) || 0;
+    const method = document.getElementById('paymentMethod').value;
+
+    await addDoc(collection(db, `users/${user.uid}/sales`), {
+      invoiceNo,
+      cart: cartPOS.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        qty: item.qty
+      })),
+      total,
+      paid,
+      change,
+      method,
+      date: new Date()
+    });
+
+    // (1) KURANGI STOK per item
+    for (const cartItem of cartPOS) {
+      const productRef = doc(db, `users/${user.uid}/products`, cartItem.id);
+      // Decrement stok sesuai qty
+      await updateDoc(productRef, {
+        stock: increment(-cartItem.qty)
+      });
+    }
+
+    await Swal.fire({ icon: 'success', title: 'Transaction Saved', text: "Invoice: " + invoiceNo });
+
+    // (2) Bersihkan cart & tutup payment section
+    cartPOS = [];
+    updateCartDisplay();
+    document.getElementById('payment-section').style.display = 'none';
+
+  } catch (error) {
+    console.error("Error finalizing transaction:", error);
+    await Swal.fire({ icon: 'error', title: 'Transaction Error', text: "Error finalizing transaction: " + error.message });
   }
-  
+}
 
 /********************************************** 
  * FORMAT INPUT KE RUPIAH (OPSIONAL)
@@ -1213,196 +1354,325 @@ window.formatCurrency = function(input) {
   }
 };
 
-
 /********************************************** 
  * TAMPILKAN HALAMAN SALES HISTORY
  * + TOMBOL VOID TRANSACTION
  **********************************************/
-window.showHistory = async function() {
-    const user = auth.currentUser;
-    if (!user) {
-      alert("Please login first!");
+// Fungsi Filter Sales
+window.filterSales = async function () {
+  const startDate = new Date(document.getElementById('startDate').value);
+  const endDate = new Date(document.getElementById('endDate').value);
+
+  const salesList = document.getElementById('salesList');
+  salesList.innerHTML = "Loading...";
+
+  const user = auth.currentUser;
+  if (!user) {
+      Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please login first!" });
       return;
-    }
-  
-    const content = document.getElementById('content');
-    content.innerHTML = `
-      <h2>Sales History</h2>
-      <div id="salesList">Loading...</div>
-    `;
-  
-    try {
+  }
+
+  try {
       const salesRef = collection(db, `users/${user.uid}/sales`);
       const querySnapshot = await getDocs(salesRef);
-  
-      const salesList = document.getElementById('salesList');
-      if (querySnapshot.empty) {
-        salesList.innerHTML = `<p>No sales found.</p>`;
-        return;
-      }
-  
-      let html = "";
+
+      let filteredHTML = '';
+
       querySnapshot.forEach(docSnap => {
-        const sale = docSnap.data();
-        const docId = docSnap.id;
-  
-        // Format date
-        let dateStr = "";
-        if (sale.date) {
+          const sale = docSnap.data();
           const saleDate = sale.date.toDate ? sale.date.toDate() : new Date(sale.date);
-          const day = String(saleDate.getDate()).padStart(2,'0');
-          const month = String(saleDate.getMonth()+1).padStart(2,'0');
-          const year = saleDate.getFullYear();
-          const hours = String(saleDate.getHours()).padStart(2,'0');
-          const minutes = String(saleDate.getMinutes()).padStart(2,'0');
-          const seconds = String(saleDate.getSeconds()).padStart(2,'0');
-  
-          dateStr = `${day}/${month}/${year}, ${hours}.${minutes}.${seconds}`;
-        }
-  
-        // Gunakan invoiceNo (jika ada), kalau tidak ya docId
-        const invoiceDisplay = sale.invoiceNo || `Transaction ID: ${docId}`;
-  
-        html += `
-          <div class="sale-item"
-               style="
-                 background: #f9f9f9;
-                 border-radius: 5px;
-                 margin-bottom: 10px;
-                 border: 1px solid #ccc;
-                 padding: 10px;
-                 cursor: pointer;
-               "
-               onclick="toggleSaleDetail('${docId}')"
-          >
-            <h3 style="margin: 0; font-size: 16px;">
-              ${invoiceDisplay}
-            </h3>
-            <p style="font-size: 14px; color: #666;">${dateStr}</p>
-            <div id="detail-${docId}" style="display:none; margin-top:10px;">
-              <ul style="list-style: none; padding-left: 0;">
-                ${
-                  (sale.cart || []).map(item => {
-                    const subTotal = (item.price * item.qty).toLocaleString('id-ID');
-                    return `<li>${item.name} x ${item.qty} = Rp${subTotal}</li>`;
-                  }).join("")
-                }
-              </ul>
-              <p><strong>Total:</strong> Rp${(sale.total || 0).toLocaleString('id-ID')}</p>
-              <p><strong>Paid:</strong> Rp${(sale.paid || 0).toLocaleString('id-ID')}</p>
-              <p><strong>Change:</strong> Rp${(sale.change || 0).toLocaleString('id-ID')}</p>
-              <p><strong>Method:</strong> ${sale.method || ''}</p>
-              <!-- TOMBOL VOID -->
-              <button 
-                onclick="voidTransaction('${docId}', event)" 
-                style="background: #f44336; color: #fff; border: none; padding: 6px 12px; cursor: pointer;">
-                Void Transaction
-              </button>
-            </div>
-          </div>
-        `;
+
+          if ((!isNaN(startDate) && saleDate < startDate) || (!isNaN(endDate) && saleDate > endDate)) {
+              return;  // Lewati transaksi di luar rentang tanggal
+          }
+
+          filteredHTML += `
+              <div class="sale-item" style="background: #f9f9f9; border: 1px solid #ccc; padding: 10px; margin: 10px; border-radius: 8px;">
+                  <h3>${sale.invoiceNo}</h3>
+                  <p>${saleDate.toLocaleDateString()}</p>
+                  <strong>Total:</strong> Rp${sale.total.toLocaleString('id-ID')}
+              </div>
+          `;
       });
-  
-      salesList.innerHTML = html;
-  
-    } catch (error) {
+
+      salesList.innerHTML = filteredHTML || `<p>No sales found in this date range.</p>`;
+
+  } catch (error) {
       console.error("Error fetching sales:", error);
-      const salesList = document.getElementById('salesList');
-      if (salesList) {
-        salesList.innerHTML = `<p>Error loading sales: ${error.message}</p>`;
+      salesList.innerHTML = `<p>Error loading sales: ${error.message}</p>`;
+  }
+};
+
+// Fungsi Reset Filter
+window.resetFilter = function () {
+  document.getElementById('startDate').value = '';
+  document.getElementById('endDate').value = '';
+  window.showHistory();  // Tampilkan ulang semua data tanpa filter
+};
+
+
+
+window.showHistory = async function() {
+  const user = auth.currentUser;
+  if (!user) {
+    await Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please login first!" });
+    return;
+  }
+
+const content = document.getElementById('content');
+content.innerHTML = `
+  <h2>Sales History</h2>
+  
+  <!-- Filter Tanggal -->
+  <div id="filterContainer">
+    <div class="date-group">
+      <label for="startDate">Start Date:</label>
+      <input type="date" id="startDate">
+    </div>
+
+    <div class="date-group">
+      <label for="endDate">End Date:</label>
+      <input type="date" id="endDate">
+    </div>
+
+    <button class="apply-btn" onclick="filterSales()">Apply Filter</button>
+    <button class="reset-btn" onclick="resetFilter()">Reset Filter</button>
+  </div>
+
+  <div id="salesContainer">
+    <div id="salesList">Loading...</div>
+  </div>
+`;
+  try {
+    const salesRef = collection(db, `users/${user.uid}/sales`);
+    const querySnapshot = await getDocs(salesRef);
+
+    const salesList = document.getElementById('salesList');
+    if (querySnapshot.empty) {
+      salesList.innerHTML = `<p>No sales found.</p>`;
+      return;
+    }
+
+    let html = "";
+    querySnapshot.forEach(docSnap => {
+      const sale = docSnap.data();
+      const docId = docSnap.id;
+
+      let dateStr = "";
+      if (sale.date) {
+        const saleDate = sale.date.toDate ? sale.date.toDate() : new Date(sale.date);
+        const day = String(saleDate.getDate()).padStart(2, '0');
+        const month = String(saleDate.getMonth() + 1).padStart(2, '0');
+        const year = saleDate.getFullYear();
+        const hours = String(saleDate.getHours()).padStart(2, '0');
+        const minutes = String(saleDate.getMinutes()).padStart(2, '0');
+        const seconds = String(saleDate.getSeconds()).padStart(2, '0');
+
+        dateStr = `${day}/${month}/${year}, ${hours}.${minutes}.${seconds}`;
       }
-    }
-  };
+
+      const invoiceDisplay = sale.invoiceNo || `Transaction ID: ${docId}`;
+
+      html += `
+        <div class="sale-item" style="background: #f9f9f9; border: 1px solid #ccc; padding: 10px; margin: 10px; border-radius: 8px;">
+          <h3 onclick="toggleDetails('${docId}')" style="cursor: pointer; color: #007bff;">
+            ${invoiceDisplay} ▼
+          </h3>
+          <div id="details-${docId}" style="display: none; margin-top: 5px;">
+            <p>${dateStr}</p>
+            <ul>
+              ${(sale.cart || []).map(item =>
+                `<li>${item.name} x ${item.qty} = Rp${(item.price * item.qty).toLocaleString('id-ID')}</li>`
+              ).join("")}
+            </ul>
+            <p><strong>Total:</strong> Rp${(sale.total || 0).toLocaleString('id-ID')}</p>
+            <p><strong>Paid:</strong> Rp${(sale.paid || 0).toLocaleString('id-ID')}</p>
+            <p><strong>Change:</strong> Rp${(sale.change || 0).toLocaleString('id-ID')}</p>
+            <p><strong>Method:</strong> ${sale.method || ''}</p>
+            
+            <button onclick="printReceipt('${docId}')" style="background: #007bff; color: white; padding: 5px 10px; margin: 5px;">Print Receipt</button>
+            <button onclick="voidTransaction('${docId}', event)" style="background: #dc3545; color: white; padding: 5px 10px;">Void Transaction</button>
+          </div>
+        </div>
+      `;
+    });
+
+    salesList.innerHTML = html;
+
+  } catch (error) {
+    console.error("Error fetching sales:", error);
+    document.getElementById('salesList').innerHTML = `<p>Error loading sales: ${error.message}</p>`;
+  }
+};
+
+window.printReceipt = async function (transactionId) {
+  try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("Not logged in");
+
+      const transactionRef = doc(db, `users/${user.uid}/sales`, transactionId);
+      const transactionSnap = await getDoc(transactionRef);
+      if (!transactionSnap.exists()) throw new Error("Transaction not found");
+
+      const transaction = transactionSnap.data();
+
+      // Ambil Custom Text dari Firestore
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      const customText = userSnap.exists() ? (userSnap.data().customText || '') : '';
+
+      // Inisialisasi jsPDF
+      const { jsPDF } = window.jspdf;
+      const docPDF = new jsPDF();
+
+      // Isi Struk
+      docPDF.setFontSize(14);
+      docPDF.text("********** INVOICE **********", 20, 20);
+      docPDF.text(`Invoice No: ${transaction.invoiceNo}`, 20, 30);
+      docPDF.text(`Date: ${new Date(transaction.date.toDate()).toLocaleString()}`, 20, 40);
+
+      let yOffset = 50;
+      transaction.cart.forEach(item => {
+          docPDF.text(`${item.name} x ${item.qty} = Rp${(item.price * item.qty).toLocaleString('id-ID')}`, 20, yOffset);
+          yOffset += 10;
+      });
+
+      yOffset += 10;
+      docPDF.text(`Total: Rp${transaction.total.toLocaleString('id-ID')}`, 20, yOffset);
+      yOffset += 10;
+      docPDF.text(`Paid: Rp${transaction.paid.toLocaleString('id-ID')}`, 20, yOffset);
+      yOffset += 10;
+      docPDF.text(`Change: Rp${transaction.change.toLocaleString('id-ID')}`, 20, yOffset);
+      yOffset += 10;
+      docPDF.text(`Payment Method: ${transaction.method}`, 20, yOffset);
+
+      // Garis pemisah
+      yOffset += 10;
+      docPDF.text("----------------------------", 20, yOffset);
+      yOffset += 10;
+
+      // Custom Text
+      docPDF.setFontSize(12);
+      docPDF.text(customText, 20, yOffset);
+
+      yOffset += 20;
+      docPDF.text("****************************", 20, yOffset);
+
+      // Simpan sebagai PDF
+      docPDF.save(`${transaction.invoiceNo}_Receipt.pdf`);
+
+  } catch (error) {
+      console.error("Error printing receipt:", error);
+      Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+  }
+};
+window.toggleDetails = function (docId) {
+  const details = document.getElementById(`details-${docId}`);
   
-  /********************************************** 
-   * VOID TRANSACTION (MENGHAPUS DARI FIRESTORE)
-   **********************************************/
-  window.voidTransaction = async function(docId, event) {
-    // Agar klik tidak juga toggle detail
-    event.stopPropagation();
-  
-    const user = auth.currentUser;
-    if (!user) {
-      alert("Please login first!");
-      return;
-    }
-  
-    if (!confirm("Are you sure you want to void this transaction?")) {
-      return;
-    }
-  
-    try {
-      await deleteDoc(doc(db, `users/${user.uid}/sales`, docId));
-      alert("Transaction voided/removed successfully!");
-  
-      // Reload history agar tampilan ter-update
-      showHistory();
-    } catch (error) {
-      console.error("Error voiding transaction:", error);
-      alert("Failed to void transaction: " + error.message);
-    }
-  };
-   
+  if (!details) {
+    console.error(`Element with ID details-${docId} not found.`);
+    return;
+  }
+
+  details.style.display = (details.style.display === "none" || !details.style.display) ? "block" : "none";
+}
+
+
+/********************************************** 
+ * VOID TRANSACTION (MENGHAPUS DARI FIRESTORE)
+ **********************************************/
+window.voidTransaction = async function(docId, event) {
+  // Agar klik tidak juga toggle detail
+  event.stopPropagation();
+
+  const user = auth.currentUser;
+  if (!user) {
+    await Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please login first!" });
+    return;
+  }
+
+  const result = await Swal.fire({
+    title: "Are you sure?",
+    text: "Are you sure you want to void this transaction?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Yes, void it!",
+    cancelButtonText: "Cancel"
+  });
+  if (!result.isConfirmed) return;
+
+  try {
+    await deleteDoc(doc(db, `users/${user.uid}/sales`, docId));
+    await Swal.fire({ icon: 'success', title: 'Transaction Voided', text: "Transaction voided/removed successfully!" });
+
+    // Reload history agar tampilan ter-update
+    showHistory();
+  } catch (error) {
+    console.error("Error voiding transaction:", error);
+    await Swal.fire({ icon: 'error', title: 'Error', text: "Failed to void transaction: " + error.message });
+  }
+};
+
 // Fungsi toggle detail (show/hide) untuk tiap transaksi
 window.toggleSaleDetail = function(docId) {
-    const detailDiv = document.getElementById(`detail-${docId}`);
-    if (!detailDiv) return;
+  const detailDiv = document.getElementById(`detail-${docId}`);
+  if (!detailDiv) return;
 
-    // Ganti display
-    if (detailDiv.style.display === 'none') {
-        detailDiv.style.display = 'block';
-    } else {
-        detailDiv.style.display = 'none';
-    }
+  // Ganti display
+  if (detailDiv.style.display === 'none') {
+    detailDiv.style.display = 'block';
+  } else {
+    detailDiv.style.display = 'none';
+  }
 };
 
 /**********************************************
  * TAMPILKAN HALAMAN FINANCE
  **********************************************/
 window.showFinance = async function() {
-    const user = auth.currentUser;
-    if (!user) {
-      alert("Please login first!");
-      return;
-    }
-  
-    // Ambil semua produk untuk hitung total expense (purchasePrice * stock)
-    let totalExpense = 0;
-    let totalProducts = 0;
-  
-    try {
-      const productSnap = await getDocs(collection(db, `users/${user.uid}/products`));
-      productSnap.forEach((docSnap) => {
-        const p = docSnap.data();
-        const purchasePrice = p.purchasePrice || 0;
-        const stock = p.stock || 0;
-        totalExpense += (purchasePrice * stock);
-        totalProducts++;
-      });
-    } catch (error) {
-      console.error("Error getting products:", error);
-    }
-  
-    // Ambil semua penjualan untuk hitung total revenue & jumlah transaksi
-    let totalRevenue = 0;
-    let totalTransactions = 0;
-  
-    try {
-      const salesSnap = await getDocs(collection(db, `users/${user.uid}/sales`));
-      salesSnap.forEach((docSnap) => {
-        const s = docSnap.data();
-        totalRevenue += (s.total || 0);
-        totalTransactions++;
-      });
-    } catch (error) {
-      console.error("Error getting sales:", error);
-    }
-  
-    const profit = totalRevenue - totalExpense;
-  
-    // Tampilkan di #content
-    const content = document.getElementById('content');
-    content.innerHTML = `
+  const user = auth.currentUser;
+  if (!user) {
+    await Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please login first!" });
+    return;
+  }
+
+  // Ambil semua produk untuk hitung total expense (purchasePrice * stock)
+  let totalExpense = 0;
+  let totalProducts = 0;
+
+  try {
+    const productSnap = await getDocs(collection(db, `users/${user.uid}/products`));
+    productSnap.forEach((docSnap) => {
+      const p = docSnap.data();
+      const purchasePrice = p.purchasePrice || 0;
+      const stock = p.stock || 0;
+      totalExpense += (purchasePrice * stock);
+      totalProducts++;
+    });
+  } catch (error) {
+    console.error("Error getting products:", error);
+  }
+
+  // Ambil semua penjualan untuk hitung total revenue & jumlah transaksi
+  let totalRevenue = 0;
+  let totalTransactions = 0;
+
+  try {
+    const salesSnap = await getDocs(collection(db, `users/${user.uid}/sales`));
+    salesSnap.forEach((docSnap) => {
+      const s = docSnap.data();
+      totalRevenue += (s.total || 0);
+      totalTransactions++;
+    });
+  } catch (error) {
+    console.error("Error getting sales:", error);
+  }
+
+  const profit = totalRevenue - totalExpense;
+
+  // Tampilkan di #content
+  const content = document.getElementById('content');
+  content.innerHTML = `
     <h2 style="font-size: 24px; margin-bottom: 20px;">Finance</h2>
     <div class="finance-summary">
       <div class="finance-item">
@@ -1427,4 +1697,109 @@ window.showFinance = async function() {
       </div>
     </div>
   `;
-  };
+};
+
+
+// Fungsi untuk Inventory
+window.showInventory = async function() {
+  const user = auth.currentUser;
+  if (!user) {
+    await Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please login first!" });
+    return;
+  }
+
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <h2>Inventory Management</h2>
+    <div id="inventoryList">Loading...</div>
+  `;
+
+  loadInventoryItems(); // Panggil fungsi untuk memuat data inventaris
+};
+// Fungsi untuk memuat data inventaris dari Firestore
+async function loadInventoryItems() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const inventoryList = document.getElementById('inventoryList');
+  inventoryList.innerHTML = 'Loading...';
+
+  try {
+    const querySnapshot = await getDocs(collection(db, `users/${user.uid}/products`));
+    if (querySnapshot.empty) {
+      inventoryList.innerHTML = '<p>No inventory items found.</p>';
+      return;
+    }
+
+    let html = '<table class="inventory-table">';
+    html += `
+      <tr>
+        <th>Product Name</th>
+        <th>Stock</th>
+        <th>Purchase Price (Rp)</th>
+        <th>Sales History</th>
+      </tr>
+    `;
+
+    querySnapshot.forEach((docSnap) => {
+      const item = docSnap.data();
+      html += `
+        <tr>
+          <td>${item.name}</td>
+          <td>${item.stock}</td>
+          <td>Rp${(item.purchasePrice || 0).toLocaleString('id-ID')}</td>
+          <td><button onclick="viewInventoryHistory('${docSnap.id}', '${item.name}')">View History</button></td>
+        </tr>
+      `;
+    });
+
+    html += '</table>';
+    inventoryList.innerHTML = html;
+
+  } catch (error) {
+    console.error("Error loading inventory:", error);
+    inventoryList.innerHTML = `<p>Error loading inventory: ${error.message}</p>`;
+  }
+}
+// Fungsi untuk melihat riwayat transaksi per produk
+window.viewInventoryHistory = async function(productId, productName) {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <h2>Inventory History for ${productName}</h2>
+    <button onclick="showInventory()">Back to Inventory</button>
+    <div id="historyList">Loading...</div>
+  `;
+
+  const historyList = document.getElementById('historyList');
+
+  try {
+    const salesSnapshot = await getDocs(collection(db, `users/${user.uid}/sales`));
+    let historyHtml = '<ul>';
+
+    salesSnapshot.forEach((docSnap) => {
+      const sale = docSnap.data();
+      const productSold = sale.cart.find(item => item.id === productId);
+
+      if (productSold) {
+        historyHtml += `
+          <li>
+            <strong>Invoice:</strong> ${sale.invoiceNo || 'N/A'} - 
+            <strong>Quantity Sold:</strong> ${productSold.qty} - 
+            <strong>Date:</strong> ${new Date(sale.date.seconds * 1000).toLocaleDateString()}
+          </li>
+        `;
+      }
+    });
+
+    historyHtml += '</ul>';
+    historyList.innerHTML = historyHtml || '<p>No sales history for this product.</p>';
+
+  } catch (error) {
+    console.error("Error loading history:", error);
+    historyList.innerHTML = `<p>Error loading history: ${error.message}</p>`;
+  }
+};
+
