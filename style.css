@@ -5,22 +5,26 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-}
-
-body, html {
+  }
+  
+  body,
+  html {
     height: 100%;
     font-family: Arial, sans-serif;
     background-color: #c6dbee;
     color: #333;
     overflow: hidden;
-}
-/* ===== HEADER ===== */
-.app-header {
+  }
+  
+  /* ==========================
+     HEADER
+     ========================== */
+  .app-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     background-color: #007bff;
-    color: white;
+    color: #fff;
     padding: 10px 20px;
     position: fixed;
     top: 0;
@@ -28,373 +32,404 @@ body, html {
     right: 0;
     z-index: 1000;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    height: 50px; /* Tetapkan tinggi header */
-}
-
-
-.app-title {
+    height: 50px;
+  }
+  
+  .app-title {
     font-size: 1.1rem;
     font-weight: bold;
     margin-left: 10px;
-}
-
-
-/* ===== HAMBURGER MENU ===== */
-.hamburger {
+  }
+  
+  /* ==========================
+     HAMBURGER MENU
+     ========================== */
+  .hamburger {
     background: none;
     border: none;
-    color: white;
+    color: #fff;
     font-size: 1.5rem;
     cursor: pointer;
     padding: 5px;
-}
-
-/* ===== DROPDOWN UNTUK MENU HAMBURGER ===== */
-.hamburger-menu {
+  }
+  
+  .hamburger-menu {
     display: none;
     position: absolute;
-    top: 50px; 
+    top: 50px;
     left: 10px;
-    background: white;
+    background: #fff;
     border: 1px solid #ccc;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     padding: 10px;
     border-radius: 5px;
     z-index: 999;
-}
-
-.hamburger-menu button {
-    background: white;     /* Warna latar belakang putih */
-    color: black;          /* Warna teks hitam */
+  }
+  
+  .hamburger-menu button {
+    background: #fff;
+    color: #000;
     padding: 10px;
     width: 100%;
     text-align: left;
     cursor: pointer;
     font-size: 1rem;
-    border-radius: 8px;    /* Agar lebih halus di sudut */
+    border-radius: 8px;
     transition: background 0.3s ease;
-}
-
-.hamburger-menu button:hover {
-    background-color: #f0f0f0; /* Warna hover abu-abu muda */
-    color: black;              /* Pastikan tetap hitam saat hover */
-}
-
-/* ==========================
-   LAYOUT COMPONENTS
-   ========================== */
-#dashboard, #newTransaction {
+  }
+  
+  .hamburger-menu button:hover {
+    background-color: #f0f0f0;
+  }
+  
+  /* ==========================
+     LAYOUT COMPONENTS
+     ========================== */
+  #dashboard,
+  #newTransaction {
     width: 100%;
     max-width: 800px;
     margin: auto;
     overflow-y: auto;
-}
-
-/* ===== MENGATUR KONTEN AGAR TIDAK TERTUTUP HEADER ===== */
-#content {
+  }
+  
+  #content {
     width: 90%;
     max-width: 800px;
-    margin: 70px auto 20px; /* Tambahkan margin-top untuk memberi ruang di bawah header */
+    margin: 70px auto 20px;
     padding: 20px;
-    background: #ffffff;
+    padding-bottom: 70px;
+    background: #fff; /* Ubah warna merah jadi putih */
     border-radius: 15px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     overflow-y: auto;
-    padding-bottom: 70px;
-    max-height: calc(100vh - 130px); /* Mengurangi tinggi header & navbar */
+    max-height: calc(100vh - 130px);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
-
 .navbar {
+    display: flex;
+    justify-content: space-around; /* Rata tengah dengan spasi yang sama */
+    align-items: center;
+    background-color: #ffffff;
+    border-top: 1px solid #ccc;
+    padding: 10px 0;
     position: fixed;
     bottom: 0;
     width: 100%;
-    background: white;
-    border-top: 1px solid #ccc;
-    padding: 10px 0;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    z-index: 999;
-}
-
-/* ==========================
-   UI COMPONENTS
-   ========================== */
-/* Buttons */
-button {
-    padding: 10px;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+  }
+  
+  /* ==========================
+     UI COMPONENTS & BUTTONS
+     ========================== */
+  /* Default button style – gunakan sebagai dasar, kemudian override lewat kelas spesifik */
+  button {
+    padding: 8px 12px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-/* Setiap tombol punya margin horizontal yang kecil
-   supaya tidak berdempetan. */
-   .nav-btn {
+    transition: background 0.3s ease, transform 0.3s ease;
+    background-color: #007bff;
+    color: #fff;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Nav Button (misalnya untuk navbar) */
+  .nav-btn {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Ikon di atas, teks di bawah */
     align-items: center;
-    background: none;
-    padding: 5px 10px;
-    font-size: 0.8rem;
-    color: #004d99;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-/* Ikon di atas label, beri sedikit jarak */
-.nav-btn .icon {
-    font-size: 22px;
-    margin-bottom: 3px;
-}
-
-.action-btn {
-    background-color: #007bff;
-    color: white;
-    padding: 10px 15px;
-    border-radius: 8px;
-}
-
-.submit-btn {
-    background-color: #007bff;
-    color: white;
-}
-
-/* Tombol Process Payment */
-/* Styling tombol tetap seperti sebelumnya */
-.process-btn {
-    background: linear-gradient(90deg, #007bff, #0056b3);
-    color: white;
-    padding: 12px 0;
+    justify-content: center;
+    padding: 8px 10px;
+    background: transparent;
     border: none;
-    border-radius: 8px;
-    width: 100%;
-    font-size: 16px;
-    font-weight: bold;
+    outline: none;
     cursor: pointer;
     transition: background 0.3s ease;
-    margin-bottom: 10px; /* Memberikan jarak ke tombol Cancel */
-}
-
-/* Hover Effect */
-.process-btn:hover {
-    background: linear-gradient(90deg, #0056b3, #003f7f);
-}
-
-/* Tombol Cancel */
-.cancel-btn {
-    background-color: #dc3545;
-    color: white;
+    font-size: 14px;
+    color: #004080; /* Warna biru gelap */
+    border-radius: 8px;
+  }
+  
+  .nav-btn .icon {
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+  
+  /* Action & Submit Buttons */
+  .action-btn,
+  .submit-btn {
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+  }
+  
+  /* Process Payment Button */
+  .process-btn {
+    background: linear-gradient(90deg, #007bff, #0056b3);
+    color: #fff;
     padding: 12px 0;
-    border: none;
     border-radius: 8px;
     width: 100%;
     font-size: 16px;
     font-weight: bold;
-    cursor: pointer;
+    margin-bottom: 10px;
+  }
+  
+  .process-btn:hover {
+    background: linear-gradient(90deg, #0056b3, #003f7f);
+  }
+  
+  /* Cancel Button */
+  .cancel-btn {
+    background-color: #dc3545;
+    color: #fff;
+    padding: 12px 0;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 16px;
+    font-weight: bold;
     transition: background-color 0.3s ease;
-}
-
-/* Hover Effect untuk Cancel */
-.cancel-btn:hover {
-    background-color: #c82333; /* Warna merah lebih gelap saat hover */
-}
-
-.change-amount {
-    margin-bottom: 15px;  /* Jarak ke tombol di bawahnya */
+  }
+  
+  .cancel-btn:hover {
+    background-color: #c82333;
+  }
+  
+  /* Utility for change amount */
+  .change-amount {
+    margin-bottom: 15px;
     font-weight: bold;
     font-size: 16px;
-    text-align: right;    /* Memindahkan angka ke kanan */
-}
-
-#addProduct {
+    text-align: right;
+  }
+  
+  /* Special button for Add Product */
+  #addProduct {
     background-color: #b3d9ff;
     color: #004d99;
     font-size: 1rem;
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-/* Product List */
-.product-list {
+  }
+  
+  /* ==========================
+     PRODUCT LIST & ITEMS
+     ========================== */
+  .product-list {
     list-style: none;
     padding: 0;
     display: flex;
     flex-direction: column;
     gap: 10px;
-}
-
-.product-item {
+  }
+  
+  .product-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: #ffffff;
+    background: #fff;
     border-radius: 10px;
     padding: 10px;
     min-height: 100px;
-    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease-in-out;
-}
-
-.product-image {
+  }
+  
+  .product-item:hover {
+    transform: scale(1.02);
+  }
+  
+  .product-image {
     width: 80px;
     height: 80px;
     object-fit: cover;
     border-radius: 8px;
     margin-right: 15px;
     flex-shrink: 0;
-}
-
-.product-info h3 {
+  }
+  
+  .product-info h3 {
     margin: 0;
     font-size: 16px;
     font-weight: bold;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-/* Forms */
-.form-container {
+  }
+  
+  /* ==========================
+     FORMS
+     ========================== */
+  .form-container {
     width: 90%;
     max-width: 400px;
     background: #fff;
     padding: 20px;
     border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     margin: auto;
     max-height: 80vh;
     overflow-y: auto;
-}
-
-input, select, textarea {
+  }
+  
+  input,
+  select,
+  textarea {
     width: 100%;
     padding: 10px;
     margin-top: 5px;
     border: 1px solid #ccc;
     border-radius: 5px;
-}
-
-textarea {
+    transition: border 0.3s;
+  }
+  
+  textarea {
     resize: none;
     height: 80px;
-}
-
-/* Account Section */
-.account-header {
-    background-color: #f5f5f5;
+  }
+  
+  /* ==========================
+     ACCOUNT SECTION
+     ========================== */
+  .account-header {
+    background: #f5f5f5;
     padding: 20px;
     border-bottom: 1px solid #ddd;
-}
-
-.account-section {
+  }
+  
+  .account-section {
     padding: 15px 20px;
-}
-
-.account-list {
+  }
+  
+  .account-list {
     list-style: none;
     padding: 0;
-}
-
-.account-list li {
+  }
+  
+  .account-list li {
     display: flex;
     justify-content: space-between;
     padding: 10px 0;
     border-bottom: 1px solid #eee;
     cursor: pointer;
     transition: background-color 0.3s ease;
-}
-
-/* ==========================
-   INTERACTIONS & STATES
-   ========================== */
-button:hover {
-    opacity: 0.8;
-}
-
-/* Mengurangi efek scale agar tombol tidak
-   terlalu melompat dan mengganggu layout */
-.nav-btn:hover {
-    color: #003366;
-    transform: scale(1.05);
-}
-
-.nav-btn:active {
-    transform: scale(0.95);
-}
-
-.product-item:hover {
-    transform: scale(1.02);
-}
-
-.edit-btn:hover {
-    color: #0056b3;
-}
-
-.delete-btn:hover {
-    color: #b02a37;
-}
-
-.account-list li:hover {
+  }
+  
+  .account-list li:hover {
     background-color: #f0f8ff;
-}
+  }
+  
+  /* ==========================
+     INTERACTIONS & STATES
+     ========================== */
+     .nav-btn:hover {
+        background-color: #e6f0ff; /* Biru muda saat hover */
+      }
+  
+      .nav-btn.active {
+        background-color: #007bff; /* Warna biru untuk tombol aktif */
+        color: #ffffff;
+        border-radius: 10px;
+        padding: 10px 12px;
+        transition: all 0.3s ease;
+      }
 
-.action-btn:hover {
+     /* Label Teks */
+    .nav-btn .label {
+    font-size: 12px;
+    font-weight: 500;
+    } 
+  .edit-btn:hover {
+    color: #0056b3;
+  }
+  
+  .delete-btn:hover {
+    color: #b02a37;
+  }
+  
+  .action-btn:hover {
     background-color: #0056b3;
     transform: scale(1.05);
-}
-
-/* ==========================
-   UTILITIES
-   ========================== */
-.toast {
+  }
+  
+  /* ==========================
+     UTILITIES
+     ========================== */
+  .toast {
     position: fixed;
     bottom: 10px;
     right: 10px;
     background: #28a745;
-    color: white;
+    color: #fff;
     padding: 10px 20px;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     animation: fadein 0.5s, fadeout 0.5s 2.5s;
-}
-
-@keyframes fadein {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes fadeout {
-    from { opacity: 1; }
-    to { opacity: 0; }
-}
-
-/* Search Container */
-.search-container {
-    width: 100%;
-    margin-bottom: 20px;
-}
-
-#searchProduct {
+  }
+  
+  @keyframes fadein {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes fadeout {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  
+  /* ==========================
+     SEARCH CONTAINER
+     ========================== */
+     .search-container input {
+        width: 100%;
+        padding: 10px;
+        outline: none;
+        transition: all 0.3s ease;
+      }
+  
+      .search-container input:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+      }
+      
+  #searchProduct {
     width: 100%;
     padding: 12px;
     border: 2px solid #007bff;
     border-radius: 25px;
     transition: all 0.3s ease;
-}
-
-#searchProduct:focus {
+  }
+  
+  #searchProduct:focus {
     border-color: #0056b3;
     box-shadow: 0 0 8px rgba(0, 123, 255, 0.25);
-}
-
-#pos-product-list {
-    display: grid;        /* Mengaktifkan grid layout */
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 10px;            /* Jarak antar item */
-    margin-top: 10px;
   }
+  
+  /* ==========================
+     POS PRODUCT LIST
+     ========================== */
+     #pos-product-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: space-around;
+      }
   
   .pos-product-item {
     border: 1px solid #ccc;
@@ -404,152 +439,156 @@ button:hover {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    background-color: #fff;
+    background: #fff;
   }
   
   .pos-product-item img {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
+    width: 80px;           /* Perbesar ukuran agar lebih jelas */
+    height: 80px;
+    object-fit: contain;   /* Agar gambar tidak terpotong */
     margin-bottom: 8px;
+    display: block;        /* Pastikan gambar block untuk menghindari spasi aneh */
   }
   
   .product-info h4 {
-    margin: 0 0 4px 0;
+    margin: 0 0 4px;
   }
   
   .add-to-cart-btn {
     margin-top: 10px;
     padding: 5px 10px;
-    cursor: pointer;
   }
+  
+  /* ==========================
+     FINANCE SUMMARY
+     ========================== */
   .finance-summary {
     display: flex;
     flex-direction: column;
-    gap: 10px; /* Jarak antar item */
-}
-
-.finance-item {
+    gap: 10px;
+  }
+  
+  .finance-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #fff;
+    background: #fff;
     border: 1px solid #ddd;
     border-radius: 8px;
     padding: 10px 15px;
-}
-
-.finance-label {
+  }
+  
+  .finance-label {
     font-weight: bold;
     color: #555;
     font-size: 1rem;
-}
-
-.finance-value {
+  }
+  
+  .finance-value {
     font-weight: 600;
     color: #333;
     font-size: 1rem;
-}
-/* ================================
-   MODERN CHECKOUT DESIGN
-   ================================ */
-   .checkout-container {
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    max-width: 400px;
-    margin: auto;
-    transition: all 0.3s ease;
-    animation: fadeInUp 0.5s ease;
-}
-
-/* Animasi Fade In */
-@keyframes fadeInUp {
+  }
+  
+  /* ==========================
+     MODERN CHECKOUT DESIGN
+     ========================== */
+     .checkout-container {
+        background: #fff;
+        padding: 20px 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-width: 800px;  /* Lebar maksimum diperbesar */
+        margin: 20px auto;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;  /* Memberi jarak antar elemen */
+        width: 100%;  /* Agar responsif di semua perangkat */
+        box-sizing: border-box; /* Mencegah overflow */
+      }
+  
+  @keyframes fadeInUp {
     from {
-        opacity: 0;
-        transform: translateY(20px);
+      opacity: 0;
+      transform: translateY(20px);
     }
     to {
-        opacity: 1;
-        transform: translateY(0);
+      opacity: 1;
+      transform: translateY(0);
     }
-}
-
-/* Header Checkout */
-.checkout-container h2 {
+  }
+  
+  .checkout-container h2 {
     text-align: center;
     font-size: 1.5rem;
     color: #007bff;
     margin-bottom: 15px;
-}
-
-/* Cart Item Styling */
-.cart-item {
+  }
+  
+  /* ==========================
+     CART ITEM STYLING
+     ========================== */
+  .cart-item {
     padding: 10px;
-    border-bottom: 1px solid #ddd; /* Garis pemisah antar produk */
+    border-bottom: 1px solid #ddd;
     display: flex;
     flex-direction: column;
     gap: 5px;
-}
-
-.cart-item:last-child {
-  border-bottom: none; /* Hilangkan garis di item terakhir */
-} 
-
-.cart-item-header {
+  }
+  
+  .cart-item:last-child {
+    border-bottom: none;
+  }
+  
+  .cart-item-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
+  }
   
-.cart-item-header strong {
+  .cart-item-header strong {
     font-size: 16px;
     color: #333;
-}
-
-.cart-item:hover {
-    transform: scale(1.02);
-}
-
-.cart-item img {
+  }
+  
+  .cart-item img {
     width: 50px;
     height: 50px;
     object-fit: cover;
     border-radius: 8px;
     margin-right: 10px;
-}
-
-/* Product Info */
-.product-details {
+  }
+  
+  /* Product Details in Cart */
+  .product-details {
     flex: 1;
-}
-
-.product-details h4 {
+  }
+  
+  .product-details h4 {
     margin: 0;
     font-size: 1rem;
     color: #333;
-}
-
-.product-details p {
+  }
+  
+  .product-details p {
     margin: 3px 0;
     font-size: 0.9rem;
     color: #666;
-}
-
-/* Quantity & Remove Button */
-.cart-controls {
+  }
+  
+  /* Quantity & Remove Button */
+  .cart-controls {
     display: flex;
     align-items: center;
     gap: 8px;
-}
-
-.cart-item-details {
+  }
+  
+  .cart-item-details {
     font-size: 14px;
     color: #555;
-}
+  }
   
-.qty-input {
+  .qty-input {
     width: 50px;
     text-align: center;
     border: 1px solid #ccc;
@@ -557,74 +596,73 @@ button:hover {
     padding: 4px;
     margin: 0 5px;
   }
-
-/* Remove Button */
-.remove-btn {
+  
+  .remove-btn {
     background: #ff4d4d;
-    color: white;
+    color: #fff;
     padding: 5px 10px;
     border-radius: 5px;
-    cursor: pointer;
     transition: background 0.3s;
-}
-
-.remove-btn:hover {
+  }
+  
+  .remove-btn:hover {
     background: #e60000;
-}
-
-/* Payment Section */
-.payment-section {
-    background-color: #f0f8ff;
+  }
+  
+  /* ==========================
+     PAYMENT SECTION
+     ========================== */
+  .payment-section {
+    background: #f0f8ff;
     padding: 15px;
     border-radius: 10px;
     margin-top: 20px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.payment-section label {
+  }
+  
+  .payment-section label {
     font-weight: bold;
     display: block;
     margin-bottom: 5px;
     color: #007bff;
-}
-
-.payment-section input[type="text"],
-.payment-section select {
+  }
+  
+  .payment-section input[type="text"],
+  .payment-section select {
     width: 100%;
     padding: 10px;
     margin-bottom: 15px;
     border: 1px solid #ccc;
     border-radius: 5px;
     transition: border 0.3s ease;
-}
-
-.payment-section input:focus,
-.payment-section select:focus {
+  }
+  
+  .payment-section input:focus,
+  .payment-section select:focus {
     border-color: #007bff;
     outline: none;
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
-}
-
-/* Checkout Button */
-.checkout-btn {
+  }
+  
+  /* ==========================
+     CHECKOUT BUTTON & TOTAL SECTION
+     ========================== */
+  .checkout-btn {
     background: linear-gradient(90deg, #007bff, #0056b3);
-    color: white;
+    color: #fff;
     padding: 12px 20px;
-    border: none;
     border-radius: 8px;
     width: 100%;
     font-size: 1rem;
-    cursor: pointer;
     transition: transform 0.3s, background 0.3s;
-}
-
-.checkout-btn:hover {
+  }
+  
+  .checkout-btn:hover {
     background: linear-gradient(90deg, #0056b3, #003d80);
     transform: scale(1.03);
-}
-
-/* Total Section */
-.total-section {
+  }
+  
+  .total-section {
     display: flex;
     justify-content: space-between;
     font-weight: bold;
@@ -633,108 +671,305 @@ button:hover {
     padding: 10px;
     background: #e6f3ff;
     border-radius: 8px;
-}
-.inventory-table {
+  }
+  
+  /* ==========================
+     INVENTORY TABLE
+     ========================== */
+  .inventory-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
   }
   
-  .inventory-table th, .inventory-table td {
+  .inventory-table th,
+  .inventory-table td {
     border: 1px solid #ccc;
     padding: 10px;
     text-align: center;
   }
   
   .inventory-table th {
-    background-color: #007bff;
-    color: white;
+    background: #007bff;
+    color: #fff;
   }
   
   .inventory-table tr:nth-child(even) {
-    background-color: #f9f9f9;
+    background: #f9f9f9;
   }
   
   .inventory-table tr:hover {
-    background-color: #e6f7ff;
+    background: #e6f7ff;
     cursor: pointer;
   }
   
-  button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  button:hover {
-    background-color: #0056b3;
-  }
-  #salesList {
-    max-height: 400px;    /* Atur tinggi maksimum */
-    overflow-y: auto;     /* Tambahkan scroll vertikal */
-    padding-right: 10px;  /* Memberi ruang agar tidak tertutup scrollbar */
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    background-color: #fff;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
-}
-#filterContainer {
+  /* ==========================
+     FILTER CONTAINER
+     ========================== */
+  #filterContainer {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-bottom: 15px;
-    background-color: #f0f8ff;
+    background: #f0f8ff;
     padding: 10px;
     border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    flex-wrap: wrap; /* Agar responsif */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap;
     justify-content: space-between;
-}
-
-.date-group {
+  }
+  
+  .date-group {
     display: flex;
     flex-direction: column;
     gap: 5px;
-}
-
-#filterContainer label {
+  }
+  
+  #filterContainer label {
     font-weight: bold;
     font-size: 14px;
-}
-
-#filterContainer input[type="date"] {
+  }
+  
+  #filterContainer input[type="date"] {
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 6px;
     min-width: 140px;
-}
-
-.apply-btn, .reset-btn {
+  }
+  
+  .apply-btn,
+  .reset-btn {
     padding: 8px 12px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
     transition: background 0.3s;
+  }
+  
+  .apply-btn {
+    background: #007bff;
+    color: #fff;
+  }
+  
+  .apply-btn:hover {
+    background: #0056b3;
+  }
+  
+  .reset-btn {
+    background: #dc3545;
+    color: #fff;
+  }
+  
+  .reset-btn:hover {
+    background: #b02a37;
+  }
+  
+  /* ==========================
+     EDIT PROFILE FORM
+     ========================== */
+  #editProfileForm {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin: 20px auto;
+    font-family: Arial, sans-serif;
+  }
+  
+  #editProfileForm h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  
+  #editProfileForm label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+  }
+  
+  #editProfileForm input[type="text"],
+  #editProfileForm input[type="email"],
+  #editProfileForm textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: border 0.3s;
+  }
+  
+  #editProfileForm input:focus,
+  #editProfileForm textarea:focus {
+    border-color: #007bff;
+    outline: none;
+  }
+  
+  #editProfileForm textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+  
+  #editProfileForm .action-btn,
+  #editProfileForm .cancel-btn {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  #editProfileForm .action-btn {
+    background: #007bff;
+    color: #fff;
+  }
+  
+  #editProfileForm .action-btn:hover {
+    background: #0056b3;
+  }
+  
+  #editProfileForm .cancel-btn {
+    background: #dc3545;
+    color: #fff;
+  }
+  
+  #editProfileForm .cancel-btn:hover {
+    background: #c82333;
+  }
+  
+/* ==========================
+   DASHBOARD STYLING (Modern)
+   ========================== */
+   .dashboard {
+    background: none; /* Hapus background putih tambahan */
+    box-shadow: none; /* Hapus shadow tambahan */
+    padding: 0; /* Hapus padding bawaan */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
-
-.apply-btn {
-    background-color: #007bff;
-    color: white;
-}
-
-.apply-btn:hover {
-    background-color: #0056b3;
-}
-
-.reset-btn {
-    background-color: #dc3545;
-    color: white;
-}
-
-.reset-btn:hover {
-    background-color: #b02a37;
-}
+  
+  .dashboard-header {
+    text-align: center;
+  }
+  
+  .dashboard-header h2 {
+    font-size: 2rem;
+    margin-bottom: 5px;
+  }
+  
+  .dashboard-date {
+    font-size: 14px;
+    color: #666;
+    margin-top: 5px;
+  }
+  
+  /* Statistik Cards */
+  .dashboard-stats {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 10px; /* Sedikit lebih rapat */
+  }
+  
+  .stat-card {
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    min-width: 150px; /* Mengurangi ukuran minimum */
+    max-width: 200px; /* Membatasi lebar maksimum */
+    text-align: center;
+    transition: transform 0.3s ease;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .stat-card h3 {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 5px; /* Mengurangi jarak */
+  }
+  
+  .stat-card p {
+    font-size: 20px; /* Sedikit lebih kecil */
+    font-weight: bold;
+    color: #007bff;
+    margin: 0; /* Menghilangkan margin default */
+  }
+  
+  /* Grafik Container */
+  .dashboard-chart {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .dashboard-chart h3 {
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 1.4rem;
+    color: #007bff;
+  }
+  
+  /* ==========================
+     SALES CHART STYLING
+     ========================== */
+  #salesChartContainer {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 15px;
+    overflow-x: auto; /* Menangani layar kecil */
+  }
+  
+  #salesChart {
+    width: 100% !important;
+    max-width: 600px;
+    height: 250px !important; /* Mengurangi tinggi grafik */
+    margin: 0 auto; /* Tengah */
+  }
+  
+  /* ==========================
+     DATE SECTION
+     ========================== */
+  #currentDate {
+    text-align: center;
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+  
+  /* ==========================
+     RESPONSIVE DESIGN
+     ========================== */
+  @media (max-width: 600px) {
+    .dashboard-stats {
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .stat-card {
+      min-width: 90%;
+      max-width: 100%;
+      margin-bottom: 10px;
+    }
+  
+    #salesChart {
+      height: 200px !important; /* Lebih kecil di layar kecil */
+    }
+  }
+  

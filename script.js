@@ -48,10 +48,10 @@ const loginPage = document.getElementById("login-page");
 const dashboard = document.getElementById("dashboard");
 const loginBtn = document.getElementById("loginBtn");
 
-if (loginPage && dashboard) {
-  loginPage.style.display = "none";
-  dashboard.style.display = "block";
-}
+// if (loginPage && dashboard) {
+// loginPage.style.display = "none";
+// dashboard.style.display = "block";
+// }
 
 // Login with Google
 loginBtn.addEventListener("click", async () => {
@@ -65,17 +65,119 @@ loginBtn.addEventListener("click", async () => {
   }
 });
 
-// Handle Authentication State
+// Pastikan elemen ditemukan di DOM
+
 onAuthStateChanged(auth, (user) => {
-  if (user) {
-    loginPage.style.display = "none";
-    dashboard.style.display = "block";
-    loadProducts();
+  if (loginPage && dashboard) {
+    if (user) {
+      loginPage.style.display = "none";
+      dashboard.style.display = "none"; // Jangan langsung tampilkan dashboard
+      // Jika memang ingin memanggil halaman awal tertentu, bisa load konten lain atau biarkan kosong
+    } else {
+      loginPage.style.display = "flex";
+      dashboard.style.display = "none";
+    }
   } else {
-    loginPage.style.display = "flex";
-    dashboard.style.display = "none";
+    console.warn('Elemen "login-page" atau "dashboard" tidak ditemukan.');
   }
 });
+
+// Fungsi untuk menampilkan dashboard dan mengupdate data di dalamnya
+window.showDashboard = () => {
+  const content = document.getElementById('content');
+  const dashboard = document.getElementById('dashboard');
+
+  // Kosongkan konten sebelumnya
+  content.innerHTML = "";
+
+  // Pindahkan dashboard ke dalam content
+  content.appendChild(dashboard);
+
+  // Tampilkan dashboard
+  dashboard.style.display = "block";
+
+  // Perbarui data dashboard
+  refreshDashboardData();
+};
+
+/**
+ * refreshDashboardData()
+ * Fungsi ini meng-update elemen dashboard:
+ * - Mengisi elemen #currentDate dengan tanggal saat ini
+ * - Menghitung dan meng-update statistik keuangan:
+ *    totalRevenue, totalExpense, dan inventoryCount (jumlah produk)
+ * - Menginisialisasi atau meng-update grafik Revenue vs Expense menggunakan Chart.js
+ */
+async function refreshDashboardData() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  // Update Tanggal
+  const now = new Date();
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('currentDate').textContent = now.toLocaleDateString('id-ID', options);
+
+  // Ambil Data dari Firestore
+  let totalExpense = 0, totalProducts = 0, totalRevenue = 0;
+  try {
+      const productSnap = await getDocs(collection(db, `users/${user.uid}/products`));
+      productSnap.forEach((doc) => {
+          const p = doc.data();
+          totalExpense += (p.purchasePrice || 0) * (p.stock || 0);
+          totalProducts++;
+      });
+  } catch (error) {
+      console.error("Error getting products:", error);
+  }
+
+  try {
+      const salesSnap = await getDocs(collection(db, `users/${user.uid}/sales`));
+      salesSnap.forEach((doc) => {
+          totalRevenue += doc.data().total || 0;
+      });
+  } catch (error) {
+      console.error("Error getting sales:", error);
+  }
+
+  // Update DOM
+  document.getElementById('totalRevenue').textContent = "Rp" + totalRevenue.toLocaleString('id-ID');
+  document.getElementById('totalExpense').textContent = "Rp" + totalExpense.toLocaleString('id-ID');
+  document.getElementById('inventoryCount').textContent = totalProducts;
+
+  // Tampilkan Chart (Pastikan sudah include Chart.js)
+  const ctx = document.getElementById('salesChart').getContext('2d');
+
+  if (window.dashboardChart) {
+      window.dashboardChart.data.datasets[0].data = [totalRevenue, totalExpense];
+      window.dashboardChart.update();
+  } else {
+      window.dashboardChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+              labels: ['Revenue', 'Expense'],
+              datasets: [{
+                  label: 'Amount (Rp)',
+                  data: [totalRevenue, totalExpense],
+                  backgroundColor: ['#007bff', '#dc3545'],
+                  borderColor: ['#0056b3', '#c82333'],
+                  borderWidth: 1
+              }]
+          },
+          options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                  y: {
+                      beginAtZero: true,
+                      ticks: {
+                          callback: (value) => 'Rp' + value.toLocaleString('id-ID')
+                      }
+                  }
+              }
+          }
+      });
+  }
+}
 
 // Account Section
 window.showAccount = () => {
@@ -194,56 +296,82 @@ let cachedProducts = []; // array untuk menampung data produk
 // ==================================================
 window.toggleMenu = function () {
   const menu = document.getElementById('hamburgerMenu');
-  if (menu) {
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  const toggleButton = document.querySelector('.hamburger');
+
+  if (menu && toggleButton) { // Cek apakah kedua elemen ada
+      const isVisible = menu.style.display === 'block';
+      menu.style.display = isVisible ? 'none' : 'block';
+
+      if (!isVisible) {
+          setTimeout(() => { // Memberikan sedikit jeda agar klik pertama tidak langsung menutup menu
+              document.addEventListener('click', closeMenuOnClickOutside);
+          }, 10);
+      } else {
+          document.removeEventListener('click', closeMenuOnClickOutside);
+      }
+  } else {
+      console.warn('Element "hamburgerMenu" atau ".hamburger-icon" tidak ditemukan.');
   }
 };
+
+function closeMenuOnClickOutside(event) {
+  const menu = document.getElementById('hamburgerMenu');
+  const toggleButton = document.querySelector('.hamburger');
+
+  if (menu && toggleButton) {
+      if (!menu.contains(event.target) && !toggleButton.contains(event.target)) {
+          menu.style.display = 'none';
+          document.removeEventListener('click', closeMenuOnClickOutside);
+      }
+  }
+}
+
 
 /**********************************************
  * Menampilkan Halaman Produk
  **********************************************/
 window.showProducts = () => {
+  // Periksa apakah elemen #dashboard ada sebelum mencoba menyembunyikannya
+  const dashboard = document.getElementById('dashboard');
+  if (dashboard) {
+    dashboard.style.display = "none";
+  }
+
   const content = document.getElementById('content');
   content.innerHTML = `
-        <!-- Kotak pencarian tetap -->
-        <div class="search-container">
-            <input type="text" id="searchProduct" placeholder="Search products...">
+    <!-- Kotak pencarian tetap -->
+    <div class="search-container">
+        <input type="text" id="searchProduct" placeholder="Search products...">
+    </div>
+
+    <h2>Products</h2>
+
+    <!-- Toolbar Produk -->
+    <div class="product-toolbar">
+        <button class="add-product-btn" onclick="addProductForm()">Add Product</button>
+        
+        <hr class="toolbar-separator">
+
+        <div class="filter-container">
+            <button id="btnFilterAZ">
+                <i class="fas fa-sort-alpha-down"></i> A-Z
+            </button>
+            <button id="btnFilterZA">
+                <i class="fas fa-sort-alpha-up"></i> Z-A
+            </button>
+
+            <select id="filterCategory">
+                <option value="">All Categories</option>
+            </select>
+
+            <button id="manageCategoryBtn">
+                <i class="fas fa-cog"></i> Manage Categories
+            </button>
         </div>
+    </div>
 
-        <h2>Products</h2>
-
-        <!-- Toolbar Produk -->
-        <div class="product-toolbar">
-            <button class="add-product-btn" onclick="addProductForm()">Add Product</button>
-            
-            <!-- Garis pemisah, bisa dengan <hr> atau styling CSS -->
-            <hr class="toolbar-separator">
-
-            <!-- Container untuk filter -->
-            <div class="filter-container">
-                <button id="btnFilterAZ">
-                    <i class="fas fa-sort-alpha-down"></i> A-Z
-                </button>
-                <button id="btnFilterZA">
-                    <i class="fas fa-sort-alpha-up"></i> Z-A
-                </button>
-
-                <!-- Filter kategori -->
-                <select id="filterCategory">
-                    <option value="">All Categories</option>
-                    <!-- Nanti diisi dynamic -->
-                </select>
-
-                <!-- Tombol Manage Categories -->
-                <button id="manageCategoryBtn">
-                    <i class="fas fa-cog"></i> Manage Categories
-                </button>
-            </div>
-        </div>
-
-        <!-- Daftar produk -->
-        <ul id="productList"></ul>
-    `;
+    <ul id="productList"></ul>
+  `;
 
   // Event: Search
   document.getElementById('searchProduct').addEventListener('input', function(e) {
@@ -257,14 +385,10 @@ window.showProducts = () => {
   });
 
   // Event: Sort A-Z
-  document.getElementById('btnFilterAZ').addEventListener('click', () => {
-    sortProductsAZ();
-  });
+  document.getElementById('btnFilterAZ').addEventListener('click', sortProductsAZ);
 
   // Event: Sort Z-A
-  document.getElementById('btnFilterZA').addEventListener('click', () => {
-    sortProductsZA();
-  });
+  document.getElementById('btnFilterZA').addEventListener('click', sortProductsZA);
 
   // Event: Filter Kategori
   const filterCategorySelect = document.getElementById('filterCategory');
@@ -273,14 +397,12 @@ window.showProducts = () => {
   });
 
   // Event: Manage Categories
-  document.getElementById('manageCategoryBtn').addEventListener('click', () => {
-    showCategoryManager(); // Buat fungsi terpisah untuk mengelola kategori
-  });
+  document.getElementById('manageCategoryBtn').addEventListener('click', showCategoryManager);
 
-  // Panggil loadProducts dengan sedikit delay (opsional)
+  // Panggil loadProducts dengan sedikit delay
   setTimeout(() => {
     loadProducts();
-    loadCategoryOptions(); // Untuk isi <select> filter kategori
+    loadCategoryOptions();
   }, 100);
 };
 
@@ -1108,6 +1230,11 @@ window.removeFromCart = function(index) {
  * TAMPILKAN HALAMAN POS
  **********************************************/
 window.showPOS = async function() {
+  // Sembunyikan dashboard jika sedang tampil
+  const dashboard = document.getElementById('dashboard');
+  if (dashboard) {
+    dashboard.style.display = "none";
+  }
   const user = auth.currentUser;
   if (!user) {
     await Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please login first!" });
@@ -1413,6 +1540,8 @@ window.resetFilter = function () {
 
 
 window.showHistory = async function() {
+  // Sembunyikan dashboard jika sedang tampil
+  document.getElementById('dashboard').style.display = "none";  
   const user = auth.currentUser;
   if (!user) {
     await Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please login first!" });
@@ -1630,6 +1759,11 @@ window.toggleSaleDetail = function(docId) {
  * TAMPILKAN HALAMAN FINANCE
  **********************************************/
 window.showFinance = async function() {
+  // Sembunyikan dashboard jika sedang tampil
+  const dashboard = document.getElementById('dashboard');
+  if (dashboard) {
+    dashboard.style.display = "none";
+  }  
   const user = auth.currentUser;
   if (!user) {
     await Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please login first!" });
@@ -1702,6 +1836,11 @@ window.showFinance = async function() {
 
 // Fungsi untuk Inventory
 window.showInventory = async function() {
+  // Sembunyikan dashboard jika sedang tampil
+  const dashboard = document.getElementById('dashboard');
+  if (dashboard) {
+    dashboard.style.display = "none";
+  }
   const user = auth.currentUser;
   if (!user) {
     await Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please login first!" });
