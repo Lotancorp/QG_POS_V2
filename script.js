@@ -196,13 +196,6 @@ window.showAccount = () => {
         <li onclick="logout()" class="logout-btn">Logout <span>&#x21aa;</span></li>
       </ul>
     </div>
-
-    <div class="account-section">
-      <h3>Transaction History</h3>
-      <ul class="account-list">
-        <li onclick="viewTransactionHistory()">View Transactions <span>&rsaquo;</span></li>
-      </ul>
-    </div>
   `;
 };
 
@@ -284,6 +277,48 @@ window.editProfile = () => {
   });
 };
 
+window.changePassword = () => {
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <div class="form-container">
+      <h2>Change Password</h2>
+      
+      <label for="currentPassword">Current Password:</label>
+      <input type="password" id="currentPassword" placeholder="Enter current password">
+
+      <label for="newPassword">New Password:</label>
+      <input type="password" id="newPassword" placeholder="Enter new password">
+
+      <label for="confirmPassword">Confirm New Password:</label>
+      <input type="password" id="confirmPassword" placeholder="Confirm new password">
+
+      <button class="action-btn" onclick="submitPasswordChange()">Change Password</button>
+      <button class="cancel-btn" onclick="showAccount()">Cancel</button>
+    </div>
+  `;
+};
+
+window.submitPasswordChange = () => {
+  const currentPassword = document.getElementById('currentPassword').value;
+  const newPassword = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    alert("Please fill in all fields.");
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    alert("New passwords do not match!");
+    return;
+  }
+
+  // Simulasi proses perubahan password
+  setTimeout(() => {
+    alert("Password changed successfully!");
+    showAccount(); // Kembali ke halaman akun setelah berhasil
+  }, 1000);
+};
 
 /********************************************** 
  * VARIABEL GLOBAL
