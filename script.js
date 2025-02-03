@@ -85,20 +85,46 @@ onAuthStateChanged(auth, (user) => {
 // Fungsi untuk menampilkan dashboard dan mengupdate data di dalamnya
 window.showDashboard = () => {
   const content = document.getElementById('content');
-  const dashboard = document.getElementById('dashboard');
-
-  // Kosongkan konten sebelumnya
+  // Bersihkan konten lama
   content.innerHTML = "";
-
-  // Pindahkan dashboard ke dalam content
+  
+  // Buat ulang elemen dashboard
+  const dashboard = document.createElement('div');
+  dashboard.id = "dashboard";
+  dashboard.className = "dashboard";
+  dashboard.innerHTML = `
+    <div class="dashboard-header">
+      <h2>Dashboard Overview</h2>
+      <div id="currentDate" class="dashboard-date"></div>
+    </div>
+    <div class="dashboard-stats">
+      <div class="stat-card revenue">
+        <h3>Total Revenue</h3>
+        <p id="totalRevenue">Rp0</p>
+      </div>
+      <div class="stat-card expense">
+        <h3>Total Expense</h3>
+        <p id="totalExpense">Rp0</p>
+      </div>
+      <div class="stat-card inventory">
+        <h3>Inventory Items</h3>
+        <p id="inventoryCount">0</p>
+      </div>
+    </div>
+    <div class="dashboard-chart">
+      <h3>Revenue vs Expense</h3>
+      <canvas id="salesChart"></canvas>
+    </div>
+  `;
   content.appendChild(dashboard);
-
+  
   // Tampilkan dashboard
   dashboard.style.display = "block";
-
+  
   // Perbarui data dashboard
   refreshDashboardData();
 };
+
 
 /**
  * refreshDashboardData()
@@ -115,69 +141,76 @@ async function refreshDashboardData() {
   // Update Tanggal
   const now = new Date();
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  document.getElementById('currentDate').textContent = now.toLocaleDateString('id-ID', options);
+  const dateElement = document.getElementById('currentDate');
+  if (dateElement) dateElement.textContent = now.toLocaleDateString('id-ID', options);
 
-  // Ambil Data dari Firestore
   let totalExpense = 0, totalProducts = 0, totalRevenue = 0;
+
   try {
-      const productSnap = await getDocs(collection(db, `users/${user.uid}/products`));
-      productSnap.forEach((doc) => {
-          const p = doc.data();
-          totalExpense += (p.purchasePrice || 0) * (p.stock || 0);
-          totalProducts++;
-      });
+    const productSnap = await getDocs(collection(db, `users/${user.uid}/products`));
+    productSnap.forEach((doc) => {
+      const p = doc.data();
+      totalExpense += (p.purchasePrice || 0) * (p.stock || 0);
+      totalProducts++;
+    });
   } catch (error) {
-      console.error("Error getting products:", error);
+    console.error("Error getting products:", error);
   }
 
   try {
-      const salesSnap = await getDocs(collection(db, `users/${user.uid}/sales`));
-      salesSnap.forEach((doc) => {
-          totalRevenue += doc.data().total || 0;
-      });
+    const salesSnap = await getDocs(collection(db, `users/${user.uid}/sales`));
+    salesSnap.forEach((doc) => {
+      totalRevenue += doc.data().total || 0;
+    });
   } catch (error) {
-      console.error("Error getting sales:", error);
+    console.error("Error getting sales:", error);
   }
 
-  // Update DOM
-  document.getElementById('totalRevenue').textContent = "Rp" + totalRevenue.toLocaleString('id-ID');
-  document.getElementById('totalExpense').textContent = "Rp" + totalExpense.toLocaleString('id-ID');
-  document.getElementById('inventoryCount').textContent = totalProducts;
+  // Update DOM dengan validasi
+  const revenueElement = document.getElementById('totalRevenue');
+  const expenseElement = document.getElementById('totalExpense');
+  const inventoryElement = document.getElementById('inventoryCount');
 
-  // Tampilkan Chart (Pastikan sudah include Chart.js)
-  const ctx = document.getElementById('salesChart').getContext('2d');
+  if (revenueElement) revenueElement.textContent = "Rp" + totalRevenue.toLocaleString('id-ID');
+  if (expenseElement) expenseElement.textContent = "Rp" + totalExpense.toLocaleString('id-ID');
+  if (inventoryElement) inventoryElement.textContent = totalProducts;
 
-  if (window.dashboardChart) {
+  // Tampilkan Chart
+  const ctx = document.getElementById('salesChart')?.getContext('2d');
+  if (ctx) {
+    if (window.dashboardChart) {
       window.dashboardChart.data.datasets[0].data = [totalRevenue, totalExpense];
       window.dashboardChart.update();
-  } else {
+    } else {
       window.dashboardChart = new Chart(ctx, {
-          type: 'bar',
-          data: {
-              labels: ['Revenue', 'Expense'],
-              datasets: [{
-                  label: 'Amount (Rp)',
-                  data: [totalRevenue, totalExpense],
-                  backgroundColor: ['#007bff', '#dc3545'],
-                  borderColor: ['#0056b3', '#c82333'],
-                  borderWidth: 1
-              }]
-          },
-          options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                  y: {
-                      beginAtZero: true,
-                      ticks: {
-                          callback: (value) => 'Rp' + value.toLocaleString('id-ID')
-                      }
-                  }
+        type: 'bar',
+        data: {
+          labels: ['Revenue', 'Expense'],
+          datasets: [{
+            label: 'Amount (Rp)',
+            data: [totalRevenue, totalExpense],
+            backgroundColor: ['#007bff', '#dc3545'],
+            borderColor: ['#0056b3', '#c82333'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: (value) => 'Rp' + value.toLocaleString('id-ID')
               }
+            }
           }
+        }
       });
+    }
   }
 }
+
 
 // Account Section
 window.showAccount = () => {
@@ -684,43 +717,45 @@ async function updateCategory(categoryId, newName) {
 window.addProductForm = () => {
   const content = document.getElementById('content');
   content.innerHTML = `
-        <div class="form-container">
-            <h2>Add New Product</h2>
-            <form id="addProductForm">
-                <label>Product Image:</label>
-                <input type="file" id="productImage" accept="image/*">
-                <img id="imagePreview" src="default-thumbnail.png" alt="Image Preview" style="max-width: 100px; height: auto; margin-top: 10px;">
+  <div class="form-container">
+      <h2>Add New Product</h2>
+      <form id="addProductForm">
+          <label>Product Image:</label>
+          <input type="file" id="productImage" accept="image/*">
+          <img id="imagePreview" src="default-thumbnail.png" alt="Image Preview" style="max-width: 100px; height: auto; margin-top: 10px;">
 
-                <label>Product Name:</label>
-                <input type="text" id="productName" required>
+          <label>Product Name:</label>
+          <input type="text" id="productName" required>
 
-                <label>Price (Rp):</label>
-                <input type="text" id="productPrice" required oninput="formatCurrency(this)">
+          <label>Price (Rp):</label>
+          <input type="text" id="productPrice" required oninput="formatCurrency(this)">
 
-                <label>Purchase Price (Rp):</label>
-                <input type="text" id="purchasePrice" required oninput="formatCurrency(this)">
+          <label>Purchase Price (Rp):</label>
+          <input type="text" id="purchasePrice" required oninput="formatCurrency(this)">
 
-                <label>Stock:</label>
-                <input type="number" id="stock" required>
+          <label>Stock:</label>
+          <input type="number" id="stock" required>
 
-                <label>Description:</label>
-                <textarea id="description"></textarea>
+          <label>Description:</label>
+          <textarea id="description"></textarea>
 
-                <label>Category:</label>
-                <div>
-                    <select id="categoryDropdown" required>
-                        <option value="" disabled selected>Select category</option>
-                    </select>
-                    <input type="text" id="newCategory" placeholder="Or create new category">
-                    <button type="button" onclick="addNewCategory()">Add</button>
-                </div>
+          <label>Category:</label>
+          <div class="category-container">
+              <select id="categoryDropdown" required>
+                  <option value="" disabled selected>Select category</option>
+              </select>
+              <input type="text" id="newCategory" placeholder="Or create new category">
+              <button type="button" class="add-category-btn" onclick="addNewCategory()">Add</button>
+          </div>
 
-                <!-- Tombol aksi -->
-                <button type="submit" class="submit-btn">Save Product</button>
-                <button type="button" class="cancel-btn" id="cancelAddBtn">Cancel</button>
-            </form>
-        </div>
-    `;
+          <!-- Tombol aksi dibungkus dalam container -->
+          <div class="form-actions">
+              <button type="submit" class="submit-btn">Save Product</button>
+              <button type="button" class="cancel-btn" id="cancelAddBtn">Cancel</button>
+          </div>
+      </form>
+  </div>
+`;
 
   // Panggil fungsi memuat kategori dan setup form
   loadCategories();
@@ -1270,6 +1305,7 @@ window.showPOS = async function() {
   if (dashboard) {
     dashboard.style.display = "none";
   }
+
   const user = auth.currentUser;
   if (!user) {
     await Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please login first!" });
@@ -1338,47 +1374,86 @@ window.showPOS = async function() {
       </div>
     </div>
   `;
-  
 
   // Ambil data produk dulu, lalu tunggu
   await loadPOSProducts();
 
   // Pasang event listener pada pencarian
   const searchInput = document.getElementById('posSearchProduct');
-  searchInput.addEventListener('input', filterPOSProducts);
+  if (searchInput) {
+    searchInput.addEventListener('input', filterPOSProducts);
+  } else {
+    console.error("Element with ID 'posSearchProduct' tidak ditemukan.");
+  }
 
   // Tombol Checkout
   const checkoutBtn = document.getElementById('pos-checkout-btn');
-  checkoutBtn.addEventListener('click', () => {
-    if (cartPOS.length === 0) {
-      Swal.fire({ icon: 'warning', title: 'Empty Cart', text: "Cart is empty!" });
-      return;
-    }
-    // Munculkan section pembayaran
-    document.getElementById('payment-section').style.display = 'block';
-    // Isi total
-    const totalText = document.getElementById('pos-total').textContent;
-    document.getElementById('paymentTotal').textContent = totalText;
-    // Reset Payment Input
-    document.getElementById('amountPaid').value = '';
-    document.getElementById('paymentChange').textContent = '0';
-  });
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', () => {
+      if (cartPOS.length === 0) {
+        Swal.fire({ icon: 'warning', title: 'Empty Cart', text: "Cart is empty!" });
+        return;
+      }
+      // Munculkan section pembayaran
+      const paymentSection = document.getElementById('payment-section');
+      if (paymentSection) {
+        paymentSection.style.display = 'block';
+      } else {
+        console.error("Element with ID 'payment-section' tidak ditemukan.");
+      }
+      // Isi total
+      const posTotalElement = document.getElementById('pos-total');
+      const paymentTotalElement = document.getElementById('paymentTotal');
+      if (posTotalElement && paymentTotalElement) {
+        paymentTotalElement.textContent = posTotalElement.textContent;
+      }
+      // Reset Payment Input
+      const amountPaidElement = document.getElementById('amountPaid');
+      if (amountPaidElement) {
+        amountPaidElement.value = '';
+      }
+      const paymentChangeElement = document.getElementById('paymentChange');
+      if (paymentChangeElement) {
+        paymentChangeElement.textContent = '0';
+      }
+    });
+  } else {
+    console.error("Element with ID 'pos-checkout-btn' tidak ditemukan.");
+  }
 
   // Tombol "Process" Payment
-  document.getElementById('processPaymentBtn').addEventListener('click', finalizeTransaction);
+  const processPaymentBtn = document.getElementById('processPaymentBtn');
+  if (processPaymentBtn) {
+    processPaymentBtn.addEventListener('click', finalizeTransaction);
+  } else {
+    console.error("Element with ID 'processPaymentBtn' tidak ditemukan.");
+  }
 
   // Tombol "Cancel" Payment
-  document.getElementById('cancelPaymentBtn').addEventListener('click', () => {
-    document.getElementById('payment-section').style.display = 'none';
-  });
+  const cancelPaymentBtn = document.getElementById('cancelPaymentBtn');
+  if (cancelPaymentBtn) {
+    cancelPaymentBtn.addEventListener('click', () => {
+      const paymentSection = document.getElementById('payment-section');
+      if (paymentSection) {
+        paymentSection.style.display = 'none';
+      }
+    });
+  } else {
+    console.error("Element with ID 'cancelPaymentBtn' tidak ditemukan.");
+  }
 
   // Pantau perubahan "amountPaid" untuk hitung kembalian
   const amountPaidInput = document.getElementById('amountPaid');
-  amountPaidInput.addEventListener('input', calculateChange);
+  if (amountPaidInput) {
+    amountPaidInput.addEventListener('input', calculateChange);
+  } else {
+    console.error("Element with ID 'amountPaid' tidak ditemukan.");
+  }
 
   // Tampilkan cart
   updateCartDisplay();
 };
+
 
 /********************************************** 
  * HITUNG KEMBALIAN SAAT AMOUNT PAID BERUBAH
@@ -1575,38 +1650,43 @@ window.resetFilter = function () {
 
 
 window.showHistory = async function() {
-  // Sembunyikan dashboard jika sedang tampil
-  document.getElementById('dashboard').style.display = "none";  
+  // Cek apakah elemen dashboard ada sebelum menyembunyikannya
+  const dashboard = document.getElementById('dashboard');
+  if (dashboard) {
+    dashboard.style.display = "none";  
+  }
+  
   const user = auth.currentUser;
   if (!user) {
     await Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please login first!" });
     return;
   }
 
-const content = document.getElementById('content');
-content.innerHTML = `
-  <h2>Sales History</h2>
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <h2>Sales History</h2>
+    
+    <!-- Filter Tanggal -->
+    <div id="filterContainer">
+      <div class="date-group">
+        <label for="startDate">Start Date:</label>
+        <input type="date" id="startDate">
+      </div>
+
+      <div class="date-group">
+        <label for="endDate">End Date:</label>
+        <input type="date" id="endDate">
+      </div>
+
+      <button class="apply-btn" onclick="filterSales()">Apply Filter</button>
+      <button class="reset-btn" onclick="resetFilter()">Reset Filter</button>
+    </div>
+
+    <div id="salesContainer">
+      <div id="salesList">Loading...</div>
+    </div>
+  `;
   
-  <!-- Filter Tanggal -->
-  <div id="filterContainer">
-    <div class="date-group">
-      <label for="startDate">Start Date:</label>
-      <input type="date" id="startDate">
-    </div>
-
-    <div class="date-group">
-      <label for="endDate">End Date:</label>
-      <input type="date" id="endDate">
-    </div>
-
-    <button class="apply-btn" onclick="filterSales()">Apply Filter</button>
-    <button class="reset-btn" onclick="resetFilter()">Reset Filter</button>
-  </div>
-
-  <div id="salesContainer">
-    <div id="salesList">Loading...</div>
-  </div>
-`;
   try {
     const salesRef = collection(db, `users/${user.uid}/sales`);
     const querySnapshot = await getDocs(salesRef);
@@ -1798,23 +1878,27 @@ window.showFinance = async function() {
   const dashboard = document.getElementById('dashboard');
   if (dashboard) {
     dashboard.style.display = "none";
-  }  
+  }
+  
   const user = auth.currentUser;
   if (!user) {
     await Swal.fire({ icon: 'warning', title: 'Not Logged In', text: "Please login first!" });
     return;
   }
 
-  // Ambil semua produk untuk hitung total expense (purchasePrice * stock)
+  // Ambil kontainer utama
+  const content = document.getElementById('content');
+
+  // Hitung Total Expense dan Total Produk
   let totalExpense = 0;
   let totalProducts = 0;
-
   try {
     const productSnap = await getDocs(collection(db, `users/${user.uid}/products`));
     productSnap.forEach((docSnap) => {
       const p = docSnap.data();
-      const purchasePrice = p.purchasePrice || 0;
-      const stock = p.stock || 0;
+      // Pastikan purchasePrice dan stock di-convert ke angka
+      const purchasePrice = Number(p.purchasePrice) || 0;
+      const stock = Number(p.stock) || 0;
       totalExpense += (purchasePrice * stock);
       totalProducts++;
     });
@@ -1822,15 +1906,14 @@ window.showFinance = async function() {
     console.error("Error getting products:", error);
   }
 
-  // Ambil semua penjualan untuk hitung total revenue & jumlah transaksi
+  // Hitung Total Revenue dan Jumlah Transaksi
   let totalRevenue = 0;
   let totalTransactions = 0;
-
   try {
     const salesSnap = await getDocs(collection(db, `users/${user.uid}/sales`));
     salesSnap.forEach((docSnap) => {
       const s = docSnap.data();
-      totalRevenue += (s.total || 0);
+      totalRevenue += Number(s.total) || 0;
       totalTransactions++;
     });
   } catch (error) {
@@ -1839,8 +1922,12 @@ window.showFinance = async function() {
 
   const profit = totalRevenue - totalExpense;
 
-  // Tampilkan di #content
-  const content = document.getElementById('content');
+  // Hitung metrik tambahan
+  const avgExpensePerProduct = totalProducts > 0 ? totalExpense / totalProducts : 0;
+  const avgRevenuePerTransaction = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
+  const profitMargin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
+
+  // Tampilkan informasi finance secara lengkap
   content.innerHTML = `
     <h2 style="font-size: 24px; margin-bottom: 20px;">Finance</h2>
     <div class="finance-summary">
@@ -1863,6 +1950,18 @@ window.showFinance = async function() {
       <div class="finance-item">
         <span class="finance-label">Profit</span>
         <span class="finance-value">Rp${profit.toLocaleString('id-ID')}</span>
+      </div>
+      <div class="finance-item">
+        <span class="finance-label">Avg Expense per Product</span>
+        <span class="finance-value">${totalProducts > 0 ? "Rp" + avgExpensePerProduct.toLocaleString('id-ID', { maximumFractionDigits: 2 }) : "-"}</span>
+      </div>
+      <div class="finance-item">
+        <span class="finance-label">Avg Revenue per Transaction</span>
+        <span class="finance-value">${totalTransactions > 0 ? "Rp" + avgRevenuePerTransaction.toLocaleString('id-ID', { maximumFractionDigits: 2 }) : "-"}</span>
+      </div>
+      <div class="finance-item">
+        <span class="finance-label">Profit Margin</span>
+        <span class="finance-value">${totalRevenue > 0 ? profitMargin.toFixed(2) + "%" : "-"}</span>
       </div>
     </div>
   `;

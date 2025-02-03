@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <!-- HEADER -->
 
@@ -40,6 +40,12 @@
     </header>
 
     
+   
+    <div id="hamburgerMenu" class="hamburger-menu">
+        <button onclick="showDashboard()">Dashboard</button>
+        <button onclick="showAccount()">Account</button>
+    </div>
+        
     <!-- Dashboard Page -->
     <div id="content">
         <div id="dashboard" class="dashboard" style="display: none;">
@@ -71,13 +77,6 @@
             </div>
         </div>
     </div>
-    
-    <div id="hamburgerMenu" class="hamburger-menu">
-        <button onclick="showDashboard()">Dashboard</button>
-        <button onclick="showAccount()">Account</button>
-    </div>
-        
-
 
     <!-- Navigation Bar -->
     <footer class="navbar">
