@@ -1,20 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS Online by Quartz Gallery</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POS Online by Quartz Gallery</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<!-- HEADER -->
 
 <body>
-      <!-- Halaman Login (menjadi tampilan awal) -->
+  <!-- Halaman Login (menjadi tampilan awal) -->
   <div id="login-page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #c6dbee;">
     <h1>POS Online by Quartz Gallery</h1>
     <button id="loginBtn" class="cursor-pointer text-black flex gap-2 items-center bg-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-zinc-300 transition-all ease-in duration-200">
@@ -32,77 +30,76 @@
       Continue with Google
     </button>
   </div>
-    <header class="app-header">
-        <button class="hamburger" onclick="toggleMenu()">
-            <i class="fas fa-bars"></i>
-        </button>
-        <h1 class="app-title">POS Online Quartz Gallery</h1>
-    </header>
 
-    
-   
-    <div id="hamburgerMenu" class="hamburger-menu">
-        <button onclick="showDashboard()">Dashboard</button>
-        <button onclick="showAccount()">Account</button>
-    </div>
+  <!-- HEADER -->
+  <header class="app-header">
+    <button class="hamburger" onclick="toggleMenu()">
+      <i class="fas fa-bars"></i>
+    </button>
+    <h1 class="app-title">POS Online Quartz Gallery</h1>
+  </header>
+
+  <!-- Hamburger Menu -->
+  <div id="hamburgerMenu" class="hamburger-menu">
+    <button onclick="showDashboard()">Dashboard</button>
+    <button onclick="showAccount()">Account</button>
+  </div>
         
-    <!-- Dashboard Page -->
-    <div id="content">
-        <div id="dashboard" class="dashboard" style="display: none;">
-            <div class="dashboard-header">
-                <h2>Dashboard Overview</h2>
-                <div id="currentDate" class="dashboard-date"></div>
-            </div>
-    
-            <!-- Statistik dalam bentuk card -->
-            <div class="dashboard-stats">
-                <div class="stat-card revenue">
-                    <h3>Total Revenue</h3>
-                    <p id="totalRevenue">Rp0</p>
-                </div>
-                <div class="stat-card expense">
-                    <h3>Total Expense</h3>
-                    <p id="totalExpense">Rp0</p>
-                </div>
-                <div class="stat-card inventory">
-                    <h3>Inventory Items</h3>
-                    <p id="inventoryCount">0</p>
-                </div>
-            </div>
-    
-            <!-- Grafik Revenue vs Expense -->
-            <div class="dashboard-chart">
-                <h3>Revenue vs Expense</h3>
-                <canvas id="salesChart"></canvas>
-            </div>
+  <!-- Dashboard Page / Content Container -->
+  <div id="content">
+    <div id="dashboard" class="dashboard" style="display: none;">
+      <div class="dashboard-header">
+        <h2>Dashboard Overview</h2>
+        <div id="currentDate" class="dashboard-date"></div>
+      </div>
+      <div class="dashboard-stats">
+        <div class="stat-card revenue">
+          <h3>Total Revenue</h3>
+          <p id="totalRevenue">Rp0</p>
         </div>
+        <div class="stat-card expense">
+          <h3>Total Expense</h3>
+          <p id="totalExpense">Rp0</p>
+        </div>
+        <div class="stat-card inventory">
+          <h3>Inventory Items</h3>
+          <p id="inventoryCount">0</p>
+        </div>
+      </div>
+      <div class="dashboard-chart">
+        <h3>Revenue vs Expense</h3>
+        <canvas id="salesChart"></canvas>
+      </div>
     </div>
+  </div>
 
-    <!-- Navigation Bar -->
-    <footer class="navbar">
-        <button class="nav-btn" onclick="showProducts()">
-            <i class="fas fa-box icon"></i>
-            <span class="label">Products</span>
-        </button>
-        <button class="nav-btn" onclick="showFinance()">
-            <i class="fas fa-hand-holding-usd icon"></i>
-            <span class="label">Finance</span>
-        </button>
-        <button class="nav-btn" onclick="showPOS()">
-            <i class="fas fa-shopping-cart icon"></i> <!-- Ganti ikon menjadi keranjang -->
-            <span>Sale</span>
-        </button>
-        <button class="nav-btn" onclick="showHistory()">
-            <i class="fas fa-file-invoice icon"></i>
-            <span class="label">History</span>
-        </button>
-        <button class="nav-btn" onclick="showInventory()">
-            <i class="fas fa-warehouse icon"></i> <!-- Ikon Inventory -->
-            <span>Inventory</span>
-        </button>
-    </footer>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script type="module" src="script.js"></script>
+  <!-- Navigation Bar -->
+  <footer class="navbar">
+    <button class="nav-btn" onclick="showProducts()">
+      <i class="fas fa-box icon"></i>
+      <span class="label">Products</span>
+    </button>
+    <button class="nav-btn" onclick="showFinance()">
+      <i class="fas fa-hand-holding-usd icon"></i>
+      <span class="label">Finance</span>
+    </button>
+    <button class="nav-btn" onclick="showPOS()">
+      <i class="fas fa-shopping-cart icon"></i>
+      <span>Sale</span>
+    </button>
+    <button class="nav-btn" onclick="showHistory()">
+      <i class="fas fa-file-invoice icon"></i>
+      <span class="label">History</span>
+    </button>
+    <button class="nav-btn" onclick="showInventory()">
+      <i class="fas fa-warehouse icon"></i>
+      <span>Inventory</span>
+    </button>
+  </footer>
+
+  <!-- SweetAlert + Script JS -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
-
 </html>
