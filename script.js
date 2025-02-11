@@ -664,64 +664,65 @@ window.addProductForm = () => {
   if (!content) return;
 
   content.innerHTML = `
-    <div class="form-container">
-      <h2>Add New Product</h2>
-      <form id="addProductForm">
-        <label>Product Image:</label>
-        <input type="file" id="productImage" accept="image/*">
-        <img id="imagePreview" src="default-thumbnail.png" alt="Image Preview" style="max-width: 100px; height: auto; margin-top: 10px;">
-        <div class="form-actions">
-          <!-- Tombol Scan Barcode -->
-          <button 
-            type="button" 
-            class="scan-barcode-btn" 
-            onclick="openBarcodeScanner()"
-          >
-            <i class="fas fa-barcode"></i> Scan Barcode
-          </button>
+  <div class="form-container">
+    <h2>Add New Product</h2>
+    <form id="addProductForm">
 
-          <button type="submit" class="submit-btn">Save Product</button>
-          <button type="button" class="cancel-btn" id="cancelAddBtn">Cancel</button>
+      <!-- Modal/Overlay Scanner (opsional) -->
+      <div id="barcodeScannerModal" style="display: none;">
+        <div class="scanner-container">
+          <video id="barcodeVideo" style="width: 100%;"></video>
+          <button type="button" onclick="closeBarcodeScanner()">Close</button>
         </div>
-        <!-- Modal/Overlay Scanner (opsional) -->
-        <div id="barcodeScannerModal" style="display: none;">
-          <div class="scanner-container">
-            <video id="barcodeVideo" style="width: 100%;"></video>
-            <button onclick="closeBarcodeScanner()">Close</button>
-          </div>
-        </div>
+      </div>
 
-        <label>Product Name:</label>
-        <input type="text" id="productName" required>
+      <label>Product Image:</label>
+      <input type="file" id="productImage" accept="image/*">
+      <img id="imagePreview"  src="https://via.placeholder.com/150" alt="Default Thumbnail"
+           style="max-width: 100px; height: auto; margin-top: 10px;">
 
-        <label>Price (Rp):</label>
-        <input type="text" id="productPrice" required oninput="formatCurrency(this)">
+      <!-- Tombol Scan -->
+      <button 
+        type="button" 
+        class="scan-barcode-btn" 
+        onclick="openBarcodeScanner()"
+        style="margin-bottom:10px;"
+      >
+        <i class="fas fa-barcode"></i> Scan Barcode
+      </button>
 
-        <label>Purchase Price (Rp):</label>
-        <input type="text" id="purchasePrice" required oninput="formatCurrency(this)">
+      <label>Product Name:</label>
+      <input type="text" id="productName" required>
 
-        <label>Stock:</label>
-        <input type="number" id="stock" required>
+      <label>Price (Rp):</label>
+      <input type="text" id="productPrice" required oninput="formatCurrency(this)">
 
-        <label>Description:</label>
-        <textarea id="description"></textarea>
+      <label>Purchase Price (Rp):</label>
+      <input type="text" id="purchasePrice" required oninput="formatCurrency(this)">
 
-        <label>Category:</label>
-        <div class="category-container">
-          <select id="categoryDropdown" required>
-            <option value="" disabled selected>Select category</option>
-          </select>
-          <input type="text" id="newCategory" placeholder="Or create new category">
-          <button type="button" class="add-category-btn" onclick="addNewCategory()">Add</button>
-        </div>
+      <label>Stock:</label>
+      <input type="number" id="stock" required>
 
-        <div class="form-actions">
-          <button type="submit" class="submit-btn">Save Product</button>
-          <button type="button" class="cancel-btn" id="cancelAddBtn">Cancel</button>
-        </div>
-      </form>
-    </div>
-  `;
+      <label>Description:</label>
+      <textarea id="description"></textarea>
+
+      <label>Category:</label>
+      <div class="category-container">
+        <select id="categoryDropdown" required>
+          <option value="" disabled selected>Select category</option>
+        </select>
+        <input type="text" id="newCategory" placeholder="Or create new category">
+        <button type="button" class="add-category-btn" onclick="addNewCategory()">Add</button>
+      </div>
+
+      <!-- Satu set form actions final di bawah -->
+      <div class="form-actions">
+        <button type="submit" class="submit-btn">Save Product</button>
+        <button type="button" class="cancel-btn" id="cancelAddBtn">Cancel</button>
+      </div>
+    </form>
+  </div>
+`;
 
   loadCategories();
   setupProductForm();
@@ -1912,12 +1913,13 @@ function autoFillForm(product) {
 ///////////////////////////////
 // Buka/Tutup Modal Scanner
 ///////////////////////////////
-function openBarcodeScanner() {
+// Beri prefix "window."
+window.openBarcodeScanner = function() {
   const scannerModal = document.getElementById('barcodeScannerModal');
   if (!scannerModal) return;
   scannerModal.style.display = 'block';
   startQuagga();
-}
+};
 
 function closeBarcodeScanner() {
   const scannerModal = document.getElementById('barcodeScannerModal');
