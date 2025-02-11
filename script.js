@@ -683,13 +683,13 @@ window.addProductForm = () => {
           <button type="submit" class="submit-btn">Save Product</button>
           <button type="button" class="cancel-btn" id="cancelAddBtn">Cancel</button>
         </div>
-            <!-- Overlay untuk scanning -->
-                <div id="barcodeScannerModal" style="display: none;">
-                  <div class="scanner-container">
-                    <video id="barcodeVideo" style="width: 100%;"></video>
-                    <button onclick="closeBarcodeScanner()">Close</button>
-                  </div>
-                </div>
+        <!-- Modal/Overlay Scanner (opsional) -->
+        <div id="barcodeScannerModal" style="display: none;">
+          <div class="scanner-container">
+            <video id="barcodeVideo" style="width: 100%;"></video>
+            <button onclick="closeBarcodeScanner()">Close</button>
+          </div>
+        </div>
 
         <label>Product Name:</label>
         <input type="text" id="productName" required>
@@ -1825,37 +1825,123 @@ window.viewInventoryHistory = async function(productId, productName) {
     historyList.innerHTML = `<p>Error loading history: ${error.message}</p>`;
   }
 };
-// Fungsi untuk membuka modal/overlay scanning
-window.openBarcodeScanner = function() {
+///////////////////////////////
+// Fungsi utama saat barcode sukses di-decode
+///////////////////////////////
+function onBarcodeDetected(result) {
+  const code = result.codeResult.code; 
+  console.log('Barcode detected:', code);
+
+  // Isi field 'productName' dengan kode barcode
+  document.getElementById('productName').value = code;
+
+  // Fetch data produk dari UPCItemDB, lalu isi form
+  fetchRetailProductData(code);
+
+  // Tutup scanner modal
+  closeBarcodeScanner();
+}
+
+///////////////////////////////
+// Panggil API UPCItemDB
+///////////////////////////////
+async function fetchRetailProductData(barcode) {
+  const url = 'https://api.upcitemdb.com/prod/trial/lookup';
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Gunakan user_key dari UPCItemDB (free tier)
+        'user_key': 'c5459e8c7e597131ff765b587033f75c'
+        // Jika dokumentasi meminta header tambahan, misal:
+        // 'key_type': '3scale',
+        // tambahkan di sini
+      },
+      body: JSON.stringify({ upc: barcode })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP Error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("Data returned by UPCItemDB:", data);
+
+    // Cek apakah ada item di dalam respons
+    if (data && data.items && data.items.length > 0) {
+      // Ambil data produk pertama
+      const product = data.items[0];
+      // Isi field lain di form (misal brand, deskripsi, dsb.)
+      autoFillForm(product);
+    } else {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Not Found',
+        text: 'No product data found for this barcode.'
+      });
+    }
+  } catch (err) {
+    console.error("fetchRetailProductData error:", err);
+    Swal.fire({
+      icon: 'error',
+      title: 'Lookup Error',
+      text: err.message
+    });
+  }
+}
+
+///////////////////////////////
+// Auto-fill ke form
+///////////////////////////////
+function autoFillForm(product) {
+  // Pastikan ID field sesuai dengan form milikmu
+  // Contoh:
+  if (product.title) {
+    document.getElementById('productName').value = product.title;
+  }
+  if (product.description) {
+    document.getElementById('description').value = product.description;
+  }
+
+  // Terkadang data brand / kategori juga ada:
+  // product.brand, product.category, dsb.
+  // Silakan tambahkan sesuai kebutuhan.
+}
+
+///////////////////////////////
+// Buka/Tutup Modal Scanner
+///////////////////////////////
+function openBarcodeScanner() {
   const scannerModal = document.getElementById('barcodeScannerModal');
   if (!scannerModal) return;
-
-  scannerModal.style.display = 'block'; // Tampilkan overlay
+  scannerModal.style.display = 'block';
   startQuagga();
-};
+}
 
-// Fungsi menutup modal
-window.closeBarcodeScanner = function() {
+function closeBarcodeScanner() {
   const scannerModal = document.getElementById('barcodeScannerModal');
   if (!scannerModal) return;
-
-  scannerModal.style.display = 'none'; 
+  scannerModal.style.display = 'none';
   stopQuagga();
-};
+}
 
+///////////////////////////////
+// Inisialisasi QuaggaJS
+///////////////////////////////
 function startQuagga() {
   Quagga.init({
     inputStream: {
       name: 'Live',
       type: 'LiveStream',
-      target: document.querySelector('#barcodeVideo'), // Video element
+      target: document.querySelector('#barcodeVideo'),
       constraints: {
-        facingMode: 'environment' // Pakai kamera belakang
+        facingMode: 'environment'
       }
     },
     decoder: {
-      // Format barcode yang ingin di-scan:  
-      readers: ['code_128_reader','ean_reader','ean_8_reader','upc_reader'] 
+      // Daftar tipe barcode yang ingin dibaca
+      readers: ['code_128_reader','ean_reader','ean_8_reader','upc_reader']
     }
   }, function(err) {
     if (err) {
@@ -1865,65 +1951,14 @@ function startQuagga() {
     Quagga.start();
   });
 
-  // Event ketika barcode terdeteksi
+  // Event ketika barcode berhasil terdeteksi
   Quagga.onDetected(onBarcodeDetected);
 }
 
 function stopQuagga() {
   Quagga.stop();
+  // Lepas event 'onDetected' supaya tidak berulang
   Quagga.offDetected(onBarcodeDetected);
 }
 
-// Callback saat barcode sukses di-decode
-function onBarcodeDetected(result) {
-  const code = result.codeResult.code; 
-  console.log('Barcode detected:', code);
-  
-  // Langsung isi “Product Name” atau field “Barcode”
-  // Tergantung rancangan form-mu
-  // Misalnya kita isi input "productName" dengan code
-  document.getElementById('productName').value = code;
 
-  // Lalu mungkin panggil fungsi untuk fetch data ritel
-  fetchRetailProductData(code);
-
-  // Tutup scanner
-  closeBarcodeScanner();
-}
-async function fetchRetailProductData(barcode) {
-  // Gunakan API key milikmu, contoh di docs barcodelookup.com
-  const apiKey = "YOUR_API_KEY";
-  const url = `https://api.barcodelookup.com/v2/products?barcode=${barcode}&formatted=y&key=${apiKey}`;
-
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data.products && data.products.length > 0) {
-      // Ambil data produk pertama
-      const product = data.products[0];
-
-      // Contoh: auto-isi form
-      // Pastikan ID input di form sesuai milikmu
-      document.getElementById('productName').value = product.title || '';
-      document.getElementById('description').value = product.description || '';
-      // Hati-hati untuk 'price' karena banyak API tidak menyediakan 'price' universal
-      // Terkadang hanya menampilkan 'brand' / 'category', dsb.
-
-      console.log("Data produk dari API:", product);
-    } else {
-      console.warn("Produk tidak ditemukan di database API.");
-      Swal.fire({
-        icon: 'warning',
-        title: 'Not Found',
-        text: 'No product data found for this barcode.'
-      });
-    }
-  } catch (error) {
-    console.error("Error fetching product data:", error);
-    Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: 'Failed to fetch product data.'
-    });
-  }
-}
